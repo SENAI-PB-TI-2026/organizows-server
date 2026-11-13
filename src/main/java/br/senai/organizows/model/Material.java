@@ -63,4 +63,8 @@ public class Material {
     public Long getLocalId() {
         return null;
     }
+
+    public void setLocalId(Long localId) {
+        
+    }
 }
