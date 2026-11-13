@@ -5,6 +5,7 @@ import br.senai.organizows.enums.StatusMaterial;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ import lombok.Setter;
 public class MaterialRequestDTO {
 
     @NotBlank(message = "A descrição do material é obrigatória")
+    @Size(max = 150, message = "A descrição deve ter no máximo 150 caracteres")
     private String descricao;
 
     @NotNull(message = "A categoria do material é obrigatória")
