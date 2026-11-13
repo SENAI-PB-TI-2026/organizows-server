@@ -4,6 +4,8 @@ import br.senai.organizows.exception.CodigoLocalizacaoDuplicadoException;
 import br.senai.organizows.exception.HierarquiaInvalidaException;
 import br.senai.organizows.model.Localizacao;
 import br.senai.organizows.repository.LocalizacaoRepository;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +27,16 @@ public class LocalizacaoService {
     public Localizacao salvar(Localizacao localizacao) {
         validarCodigoUnico(localizacao);
         validarHierarquia(localizacao);
-        return localizacaoRepository.save(localizacao);
+        try {
+            return localizacaoRepository.save(localizacao);
+        } catch (DataIntegrityViolationException ex) {
+            if (isViolacaoRestricaoCodigo(ex)) {
+                throw new CodigoLocalizacaoDuplicadoException(
+                        "Já existe uma localização cadastrada com o código: " + localizacao.getCodigo()
+                );
+            }
+            throw ex;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -132,5 +143,22 @@ public class LocalizacaoService {
                 }
             }
         }
+    }
+
+    private boolean isViolacaoRestricaoCodigo(DataIntegrityViolationException ex) {
+        Throwable cause = ex;
+        while (cause != null) {
+            if (cause instanceof ConstraintViolationException cve) {
+                if ("uk_localizacao_codigo".equalsIgnoreCase(cve.getConstraintName())) {
+                    return true;
+                }
+            }
+            String message = cause.getMessage();
+            if (message != null && message.toLowerCase().contains("uk_localizacao_codigo")) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
     }
 }

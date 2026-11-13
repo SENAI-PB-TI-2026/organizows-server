@@ -201,4 +201,50 @@ class LocalizacaoServiceTest {
         assertThat(fileira.getEnderecoCompleto())
                 .isEqualTo("Armário A > Prateleira 1 > Coluna 2 > Fileira 3");
     }
+
+    @Test
+    @DisplayName("Deve traduzir DataIntegrityViolationException para CodigoLocalizacaoDuplicadoException quando violar uk_localizacao_codigo")
+    void deveTraduzirDataIntegrityViolationExceptionParaCodigoDuplicado() {
+        LocalizacaoRepository mockRepo = org.mockito.Mockito.mock(LocalizacaoRepository.class);
+        LocalizacaoService service = new LocalizacaoService(mockRepo);
+
+        Localizacao loc = Localizacao.builder()
+                .codigo("COD-CONCORRENTE")
+                .nome("Local Concorrente")
+                .build();
+
+        org.mockito.Mockito.when(mockRepo.findByCodigo("COD-CONCORRENTE")).thenReturn(java.util.Optional.empty());
+        org.mockito.Mockito.when(mockRepo.save(loc)).thenThrow(
+                new org.springframework.dao.DataIntegrityViolationException(
+                        "Unique index or primary key violation: PUBLIC.UK_LOCALIZACAO_CODIGO"
+                )
+        );
+
+        assertThatThrownBy(() -> service.salvar(loc))
+                .isInstanceOf(CodigoLocalizacaoDuplicadoException.class)
+                .hasMessageContaining("Já existe uma localização cadastrada com o código: COD-CONCORRENTE");
+    }
+
+    @Test
+    @DisplayName("Deve propagar DataIntegrityViolationException original quando violar outra restrição")
+    void devePropagarDataIntegrityViolationExceptionQuandoOutraRestricao() {
+        LocalizacaoRepository mockRepo = org.mockito.Mockito.mock(LocalizacaoRepository.class);
+        LocalizacaoService service = new LocalizacaoService(mockRepo);
+
+        Localizacao loc = Localizacao.builder()
+                .codigo("COD-OUTRO")
+                .nome("Local Outro")
+                .build();
+
+        org.mockito.Mockito.when(mockRepo.findByCodigo("COD-OUTRO")).thenReturn(java.util.Optional.empty());
+        org.mockito.Mockito.when(mockRepo.save(loc)).thenThrow(
+                new org.springframework.dao.DataIntegrityViolationException(
+                        "Referential integrity constraint violation: FK_OUTRA_RESTRICAO"
+                )
+        );
+
+        assertThatThrownBy(() -> service.salvar(loc))
+                .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
+                .hasMessageContaining("FK_OUTRA_RESTRICAO");
+    }
 }
