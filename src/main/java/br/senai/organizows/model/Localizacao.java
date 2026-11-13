@@ -58,9 +58,15 @@ public class Localizacao {
     private Localizacao localPai;
 
     public void setLocalPai(Localizacao localPai) {
+        Localizacao anterior = this.localPai;
         this.localPai = localPai;
         if (localPai != null) {
-            validarHierarquia();
+            try {
+                validarHierarquia();
+            } catch (RuntimeException e) {
+                this.localPai = anterior;
+                throw e;
+            }
         }
     }
 

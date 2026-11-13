@@ -62,6 +62,23 @@ class LocalizacaoTest {
     }
 
     @Test
+    @DisplayName("Deve preservar o localPai anterior quando a validação de hierarquia falhar")
+    void devePreservarLocalPaiAnteriorQuandoHierarquiaForInvalida() {
+        Localizacao raiz = Localizacao.builder().id(1L).codigo("RAIZ").nome("Raiz").build();
+        Localizacao filha = Localizacao.builder().id(2L).codigo("FILHA").nome("Filha").localPai(raiz).build();
+
+        // Estado inicial: filha tem raiz como pai
+        assertThat(filha.getLocalPai()).isEqualTo(raiz);
+
+        // Tentativa inválida de autorreferência direta
+        assertThatThrownBy(() -> filha.setLocalPai(filha))
+                .isInstanceOf(HierarquiaInvalidaException.class);
+
+        // Deve manter a raiz como pai, sem ter sido corrompido para a própria filha
+        assertThat(filha.getLocalPai()).isEqualTo(raiz);
+    }
+
+    @Test
     @DisplayName("Deve montar endereço físico completo em 4 níveis (armário, prateleira, coluna, fileira)")
     void deveMontarEnderecoFisicoCompletoEmMultiplosNiveis() {
         Localizacao armario = Localizacao.builder()
