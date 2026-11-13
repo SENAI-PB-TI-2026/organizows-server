@@ -20,6 +20,9 @@ public class OpenApiConfig {
     @Value("${application.version:1.0.0}")
     private String applicationVersion;
 
+    @Value("${app.openapi.server-url:http://localhost:8080}")
+    private String serverUrl;
+
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
@@ -61,14 +64,13 @@ public class OpenApiConfig {
                                    - `/api/v1/status`: Permite monitorar a saúde da aplicação, versão e tempo de atividade.
                                 """)
                         .contact(new Contact()
-                                .name("Equipe de Desenvolvimento OrganizoWS")
-                                .email("dev@organizows.senai.br"))
+                                .name("Equipe de Desenvolvimento OrganizoWS"))
                         .license(new License()
                                 .name("Uso Interno SENAI")
                                 .url("https://www.senai.br")))
                 .servers(List.of(
                         new Server()
-                                .url("http://localhost:8080")
+                                .url(serverUrl)
                                 .description("Ambiente Local de Desenvolvimento")
                 ));
     }
