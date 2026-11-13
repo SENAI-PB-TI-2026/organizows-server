@@ -1,6 +1,11 @@
 package br.senai.organizows.model;
 
 import br.senai.organizows.exception.HierarquiaInvalidaException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -130,5 +135,79 @@ class LocalizacaoTest {
         // Caminho da hierarquia em lista
         List<Localizacao> caminho = fileira.getCaminhoHierarquia();
         assertThat(caminho).containsExactly(armario, prateleira, coluna, fileira);
+    }
+
+    private static Validator validator;
+
+    @BeforeAll
+    static void setUpValidator() {
+        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+            validator = factory.getValidator();
+        }
+    }
+
+    @Test
+    @DisplayName("Deve validar nome não branco e limite de 255 caracteres")
+    void deveValidarRestricoesDoNome() {
+        Localizacao nomeNulo = Localizacao.builder().codigo("C1").build();
+        assertThat(validator.validate(nomeNulo))
+                .extracting(ConstraintViolation::getPropertyPath)
+                .map(Object::toString)
+                .contains("nome");
+
+        Localizacao nomeBranco = Localizacao.builder().codigo("C1").nome("   ").build();
+        assertThat(validator.validate(nomeBranco))
+                .extracting(ConstraintViolation::getPropertyPath)
+                .map(Object::toString)
+                .contains("nome");
+
+        Localizacao nomeLongo = Localizacao.builder().codigo("C1").nome("a".repeat(256)).build();
+        assertThat(validator.validate(nomeLongo))
+                .extracting(ConstraintViolation::getPropertyPath)
+                .map(Object::toString)
+                .contains("nome");
+    }
+
+    @Test
+    @DisplayName("Deve validar tipo com limite de 100 caracteres")
+    void deveValidarLimiteTipo() {
+        Localizacao tipoLongo = Localizacao.builder()
+                .codigo("C1")
+                .nome("Valido")
+                .tipo("t".repeat(101))
+                .build();
+
+        assertThat(validator.validate(tipoLongo))
+                .extracting(ConstraintViolation::getPropertyPath)
+                .map(Object::toString)
+                .contains("tipo");
+    }
+
+    @Test
+    @DisplayName("Deve validar descricao com limite de 255 caracteres")
+    void deveValidarLimiteDescricao() {
+        Localizacao descLonga = Localizacao.builder()
+                .codigo("C1")
+                .nome("Valido")
+                .descricao("d".repeat(256))
+                .build();
+
+        assertThat(validator.validate(descLonga))
+                .extracting(ConstraintViolation::getPropertyPath)
+                .map(Object::toString)
+                .contains("descricao");
+    }
+
+    @Test
+    @DisplayName("Deve validar localizacao valida sem violacoes")
+    void deveValidarLocalizacaoCorreta() {
+        Localizacao valida = Localizacao.builder()
+                .codigo("C1")
+                .nome("Nome Válido")
+                .tipo("Armário")
+                .descricao("Descrição Válida")
+                .build();
+
+        assertThat(validator.validate(valida)).isEmpty();
     }
 }

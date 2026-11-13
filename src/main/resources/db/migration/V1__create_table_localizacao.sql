@@ -6,5 +6,8 @@ CREATE TABLE localizacao (
     descricao VARCHAR(255),
     local_pai_id BIGINT,
     CONSTRAINT uk_localizacao_codigo UNIQUE (codigo),
-    CONSTRAINT fk_localizacao_local_pai FOREIGN KEY (local_pai_id) REFERENCES localizacao(id)
+    CONSTRAINT fk_localizacao_local_pai FOREIGN KEY (local_pai_id) REFERENCES localizacao(id),
+    CONSTRAINT chk_localizacao_local_pai_diferente_id CHECK (local_pai_id IS NULL OR local_pai_id <> id)
 );
+
+CREATE INDEX idx_localizacao_local_pai_id ON localizacao(local_pai_id);

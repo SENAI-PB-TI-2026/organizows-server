@@ -107,6 +107,30 @@ class FlywayMigrationEmptyDatabaseTest {
                 assertThatThrownBy(stmt::executeUpdate)
                         .isInstanceOf(SQLException.class);
             }
+
+            // Validar existência do índice para local_pai_id
+            boolean indexEncontrado = false;
+            try (ResultSet rs = metaData.getIndexInfo(null, "PUBLIC", "LOCALIZACAO", false, false)) {
+                while (rs.next()) {
+                    String indexName = rs.getString("INDEX_NAME");
+                    if ("IDX_LOCALIZACAO_LOCAL_PAI_ID".equalsIgnoreCase(indexName)) {
+                        indexEncontrado = true;
+                        break;
+                    }
+                }
+            }
+            assertThat(indexEncontrado).isTrue();
+
+            // Validar constraint CHECK que impede local_pai_id igual a id
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "INSERT INTO localizacao (id, codigo, nome, local_pai_id) VALUES (?, ?, ?, ?)")) {
+                stmt.setLong(1, 99L);
+                stmt.setString(2, "CHK-AUTOREF");
+                stmt.setString(3, "Autorreferência Direta");
+                stmt.setLong(4, 99L);
+                assertThatThrownBy(stmt::executeUpdate)
+                        .isInstanceOf(SQLException.class);
+            }
         }
     }
 }

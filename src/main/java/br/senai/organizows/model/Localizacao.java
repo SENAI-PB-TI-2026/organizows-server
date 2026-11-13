@@ -12,6 +12,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -43,16 +45,20 @@ public class Localizacao {
     @Column(nullable = false, unique = true, length = 50)
     private String codigo;
 
+    @NotBlank
+    @Size(max = 255)
     @Column(nullable = false)
     private String nome;
 
+    @Size(max = 100)
     @Column(length = 100)
     private String tipo;
 
+    @Size(max = 255)
     @Column(length = 255)
     private String descricao;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "local_pai_id")
     @ToString.Exclude
     private Localizacao localPai;
