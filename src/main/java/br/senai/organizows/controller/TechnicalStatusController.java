@@ -3,6 +3,7 @@ package br.senai.organizows.controller;
 import br.senai.organizows.dto.response.ApiErrorResponse;
 import br.senai.organizows.dto.response.ApiResponse;
 import br.senai.organizows.dto.technical.TechnicalStatusDTO;
+import br.senai.organizows.dto.technical.TechnicalStatusApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -43,7 +44,7 @@ public class TechnicalStatusController {
                     description = "Aplicação em execução normal",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = TechnicalStatusDTO.class)
+                            schema = @Schema(implementation = TechnicalStatusApiResponse.class)
                     )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
