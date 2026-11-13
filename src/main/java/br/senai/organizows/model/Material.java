@@ -59,4 +59,8 @@ public class Material {
     public void preUpdate() {
         this.atualizadoEm = LocalDateTime.now();
     }
+
+    public Long getLocalId() {
+        return null;
+    }
 }
