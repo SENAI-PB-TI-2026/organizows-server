@@ -79,7 +79,7 @@ Ao abrir um PR para `develop`, o autor **deve**:
 
 ## 4. Revisão Cruzada de Integração (Code Review)
 
-O merge em `develop` **exige obrigatoriamente a revisão e aprovação de outro integrante da equipe**.
+O fluxo da equipe **exige revisão e aprovação de outro integrante antes do merge em `develop`**. Esta política, quando apenas documentada, **não é aplicada automaticamente pelo GitHub**: o administrador do repositório deve configurar um **ruleset/proteção de branch** exigindo pelo menos uma aprovação e, se aplicável, verificações obrigatórias. Até a regra estar ativa, os mantenedores devem cumprir a revisão manualmente.
 
 ### Checklist do Autor antes de solicitar revisão:
 - [ ] O código segue as convenções e padrões do projeto.
