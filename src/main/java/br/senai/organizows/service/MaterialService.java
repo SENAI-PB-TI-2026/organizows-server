@@ -67,7 +67,6 @@ public class MaterialService {
         materialRepository.delete(material);
     }
 
-    // CRITÉRIO DE ACEITE: Alerta lista só os itens com quantidade menor ou igual ao mínimo
     public List<MaterialResponseDTO> listarAlertaReposicao() {
         return materialRepository.findMateriaisParaReposicao()
                 .stream()
@@ -78,11 +77,17 @@ public class MaterialService {
     /**
      * PONTO DE INTEGRAÇÃO (Movimentação):
      * Método chamado pelo módulo de movimentação para somar (+) ou subtrair (-) o saldo.
-     * Regra: Nunca permite que o saldo disponível fique negativo.
+     * Regra: Nunca permite que o saldo disponível fique negativo e usa bloqueio pessimista.
      */
     @Transactional
     public MaterialResponseDTO ajustarSaldo(Long materialId, Integer deltaQuantidade) {
-        Material material = buscarEntidadePorId(materialId);
+        if (deltaQuantidade == null) {
+            throw new IllegalArgumentException("A quantidade de ajuste não pode ser nula.");
+        }
+
+        Material material = materialRepository.findByIdForUpdate(materialId)
+                .orElseThrow(() -> new ResourceNotFoundException("Material não encontrado com ID: " + materialId));
+
         int novoSaldo = material.getQuantidadeDisponivel() + deltaQuantidade;
 
         if (novoSaldo < 0) {
