@@ -3,8 +3,11 @@ package br.senai.organizows.service;
 import br.senai.organizows.dto.MaterialRequestDTO;
 import br.senai.organizows.dto.MaterialResponseDTO;
 import br.senai.organizows.exception.ResourceNotFoundException;
+import br.senai.organizows.model.Local;
 import br.senai.organizows.model.Material;
 import br.senai.organizows.repository.MaterialRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +20,9 @@ public class MaterialService {
 
     private final MaterialRepository materialRepository;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     public MaterialService(MaterialRepository materialRepository) {
         this.materialRepository = materialRepository;
     }
@@ -24,12 +30,7 @@ public class MaterialService {
     @Transactional
     public MaterialResponseDTO criar(MaterialRequestDTO dto) {
         Material material = new Material();
-        material.setDescricao(dto.getDescricao());
-        material.setCategoria(dto.getCategoria());
-        material.setStatus(dto.getStatus());
-        material.setLocalId(dto.getLocalId());
-        material.setQuantidadeDisponivel(dto.getQuantidadeDisponivel());
-        material.setQuantidadeMinima(dto.getQuantidadeMinima());
+        preencherDados(material, dto);
 
         Material salvo = materialRepository.save(material);
         return new MaterialResponseDTO(salvo);
@@ -50,12 +51,7 @@ public class MaterialService {
     @Transactional
     public MaterialResponseDTO atualizar(Long id, MaterialRequestDTO dto) {
         Material material = buscarEntidadePorId(id);
-        material.setDescricao(dto.getDescricao());
-        material.setCategoria(dto.getCategoria());
-        material.setStatus(dto.getStatus());
-        material.setLocalId(dto.getLocalId());
-        material.setQuantidadeDisponivel(dto.getQuantidadeDisponivel());
-        material.setQuantidadeMinima(dto.getQuantidadeMinima());
+        preencherDados(material, dto);
 
         Material atualizado = materialRepository.save(material);
         return new MaterialResponseDTO(atualizado);
@@ -74,11 +70,6 @@ public class MaterialService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * PONTO DE INTEGRAÇÃO (Movimentação):
-     * Método chamado pelo módulo de movimentação para somar (+) ou subtrair (-) o saldo.
-     * Regra: Nunca permite que o saldo disponível fique negativo e usa bloqueio pessimista.
-     */
     @Transactional
     public MaterialResponseDTO ajustarSaldo(Long materialId, Integer deltaQuantidade) {
         if (deltaQuantidade == null) {
@@ -100,6 +91,21 @@ public class MaterialService {
         material.setQuantidadeDisponivel(novoSaldo);
         Material atualizado = materialRepository.save(material);
         return new MaterialResponseDTO(atualizado);
+    }
+
+    private void preencherDados(Material material, MaterialRequestDTO dto) {
+        material.setDescricao(dto.getDescricao());
+        material.setCategoria(dto.getCategoria());
+        material.setStatus(dto.getStatus());
+        material.setQuantidadeDisponivel(dto.getQuantidadeDisponivel());
+        material.setQuantidadeMinima(dto.getQuantidadeMinima());
+
+        if (dto.getLocalId() != null) {
+            Local localRef = entityManager.getReference(Local.class, dto.getLocalId());
+            material.setLocal(localRef);
+        } else {
+            material.setLocal(null);
+        }
     }
 
     private Material buscarEntidadePorId(Long id) {
