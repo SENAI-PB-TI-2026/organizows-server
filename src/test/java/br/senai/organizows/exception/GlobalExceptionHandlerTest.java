@@ -44,8 +44,23 @@ class GlobalExceptionHandlerTest {
 
         @GetMapping("/general-error")
         public void throwGeneralError() {
-            throw new RuntimeException("Falha inesperada no processamento");
+            throw new RuntimeException("Falha inesperada no processamento: stack trace e detalhes internos confidenciais");
         }
+
+        @GetMapping("/data-integrity")
+        public void throwDataIntegrity() {
+            throw new org.springframework.dao.DataIntegrityViolationException("Violação de FK interna do PostgreSQL/H2");
+        }
+
+        @PostMapping("/validation")
+        public void throwValidation(@Valid @RequestBody TestRequestDTO dto) {
+        }
+    }
+
+    @Data
+    static class TestRequestDTO {
+        @NotBlank(message = "O campo 'nome' é obrigatório")
+        private String nome;
     }
 
     @Test
@@ -75,8 +90,34 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("Deve formatar erro genérico não tratado no padrão ApiErrorResponse com HTTP 500")
-    void shouldHandleGeneralException() throws Exception {
+    @DisplayName("Deve formatar MethodArgumentNotValidException no padrão ApiErrorResponse com HTTP 400 e fieldErrors")
+    void shouldHandleValidationException() throws Exception {
+        mockMvc.perform(post("/test/exceptions/validation")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nome\":\"\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Falha na validação dos campos da requisição"))
+                .andExpect(jsonPath("$.fieldErrors").isArray())
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("nome"))
+                .andExpect(jsonPath("$.fieldErrors[0].message").value("O campo 'nome' é obrigatório"));
+    }
+
+    @Test
+    @DisplayName("Deve formatar DataIntegrityViolationException no padrão ApiErrorResponse com HTTP 409")
+    void shouldHandleDataIntegrityViolationException() throws Exception {
+        mockMvc.perform(get("/test/exceptions/data-integrity")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("A operação violou uma restrição de integridade de dados"));
+    }
+
+    @Test
+    @DisplayName("Deve formatar erro genérico 500 sem vazamento de stacktrace ou detalhes internos")
+    void shouldHandleGeneralExceptionWithoutDataLeakage() throws Exception {
         mockMvc.perform(get("/test/exceptions/general-error")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isInternalServerError())
@@ -84,6 +125,9 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.error").value("Internal Server Error"))
                 .andExpect(jsonPath("$.message").value("Ocorreu um erro interno inesperado no servidor"))
                 .andExpect(jsonPath("$.path").value("/test/exceptions/general-error"))
-                .andExpect(jsonPath("$.timestamp").value(notNullValue()));
+                .andExpect(jsonPath("$.timestamp").value(notNullValue()))
+                .andExpect(jsonPath("$.trace").doesNotExist())
+                .andExpect(jsonPath("$.stackTrace").doesNotExist())
+                .andExpect(jsonPath("$.message", not(containsString("confidenciais"))));
     }
 }

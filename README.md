@@ -131,6 +131,16 @@ Tratamento centralizado pelo `GlobalExceptionHandler`:
 ./mvnw test
 ```
 
+---
+
+## Perfis de Ambiente e Segurança de Credenciais
+
+- **Perfil Padrão (`h2`):** Configurado como perfil default via `spring.profiles.default=h2`. Permite que novos desenvolvedores clonem o repositório e iniciem imediatamente a aplicação e testes com banco em memória H2 e migrações Flyway aplicadas automaticamente sem dependências externas.
+- **Perfis de Homologação/Produção:** O ambiente externo pode definir `SPRING_PROFILES_ACTIVE=prod` e injetar credenciais e chaves via variáveis de ambiente (`SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`).
+- **Segurança de Segredos:** Nenhuma senha, token ou chave de API deve ser versionada no repositório. O arquivo `.gitignore` já bloqueia `.env`, arquivos de credenciais e certificados.
+
+---
+
 ## Guia de Contribuição e Rastreabilidade
 
 Para manter a rastreabilidade entre tarefas, commits e entregas avaliadas, todos os colaboradores devem seguir as diretrizes documentadas em nosso [Guia de Contribuição (CONTRIBUTING.md)](CONTRIBUTING.md):
