@@ -1,7 +1,10 @@
 package br.senai.organizows.service;
 
+import br.senai.organizows.dto.localizacao.LocalizacaoRequestDTO;
+import br.senai.organizows.dto.localizacao.LocalizacaoResponseDTO;
 import br.senai.organizows.exception.CodigoLocalizacaoDuplicadoException;
 import br.senai.organizows.exception.HierarquiaInvalidaException;
+import br.senai.organizows.exception.ResourceNotFoundException;
 import br.senai.organizows.model.Localizacao;
 import br.senai.organizows.repository.LocalizacaoRepository;
 import org.hibernate.exception.ConstraintViolationException;
@@ -64,7 +67,49 @@ public class LocalizacaoService {
         return localizacaoRepository.findByLocalPaiId(localPaiId);
     }
 
+    public LocalizacaoResponseDTO criar(LocalizacaoRequestDTO dto) {
+        Localizacao pai = null;
+        if (dto.getLocalPaiId() != null) {
+            pai = localizacaoRepository.findById(dto.getLocalPaiId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Localização pai não encontrada com ID: " + dto.getLocalPaiId()));
+        }
+
+        Localizacao nova = Localizacao.builder()
+                .codigo(dto.getCodigo())
+                .nome(dto.getNome())
+                .tipo(dto.getTipo())
+                .descricao(dto.getDescricao())
+                .localPai(pai)
+                .build();
+
+        Localizacao salva = salvar(nova);
+        return LocalizacaoResponseDTO.fromEntity(salva);
+    }
+
+    public LocalizacaoResponseDTO atualizar(Long id, LocalizacaoRequestDTO dto) {
+        Localizacao existente = localizacaoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Localização não encontrada com ID: " + id));
+
+        Localizacao pai = null;
+        if (dto.getLocalPaiId() != null) {
+            pai = localizacaoRepository.findById(dto.getLocalPaiId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Localização pai não encontrada com ID: " + dto.getLocalPaiId()));
+        }
+
+        existente.setCodigo(dto.getCodigo());
+        existente.setNome(dto.getNome());
+        existente.setTipo(dto.getTipo());
+        existente.setDescricao(dto.getDescricao());
+        existente.setLocalPai(pai);
+
+        Localizacao salva = salvar(existente);
+        return LocalizacaoResponseDTO.fromEntity(salva);
+    }
+
     public void excluir(Long id) {
+        if (!localizacaoRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Localização não encontrada com ID: " + id);
+        }
         localizacaoRepository.deleteById(id);
     }
 
