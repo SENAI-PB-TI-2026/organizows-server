@@ -31,7 +31,7 @@ public class LocalizacaoService {
         validarCodigoUnico(localizacao);
         validarHierarquia(localizacao);
         try {
-            return localizacaoRepository.save(localizacao);
+            return localizacaoRepository.saveAndFlush(localizacao);
         } catch (DataIntegrityViolationException ex) {
             if (isViolacaoRestricaoCodigo(ex)) {
                 throw new CodigoLocalizacaoDuplicadoException(
@@ -96,6 +96,8 @@ public class LocalizacaoService {
                     .orElseThrow(() -> new ResourceNotFoundException("Localização pai não encontrada com ID: " + dto.getLocalPaiId()));
         }
 
+        validarCodigoUnico(Localizacao.builder().id(existente.getId()).codigo(dto.getCodigo()).build());
+
         existente.setCodigo(dto.getCodigo());
         existente.setNome(dto.getNome());
         existente.setTipo(dto.getTipo());
@@ -110,28 +112,64 @@ public class LocalizacaoService {
         if (!localizacaoRepository.existsById(id)) {
             throw new ResourceNotFoundException("Localização não encontrada com ID: " + id);
         }
+        if (localizacaoRepository.existsByLocalPaiId(id)) {
+            throw new br.senai.organizows.exception.LocalizacaoComFilhosException("Localização possui filhas e não pode ser excluída");
+        }
         localizacaoRepository.deleteById(id);
     }
 
     @Transactional(readOnly = true)
     public String obterEnderecoCompleto(Long id) {
         Localizacao localizacao = localizacaoRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Localização não encontrada com id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Localização não encontrada com id: " + id));
         return localizacao.getEnderecoCompleto();
     }
 
     @Transactional(readOnly = true)
     public String obterEnderecoCompleto(Long id, String separador) {
         Localizacao localizacao = localizacaoRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Localização não encontrada com id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Localização não encontrada com id: " + id));
         return localizacao.getEnderecoCompleto(separador);
     }
 
     @Transactional(readOnly = true)
     public List<Localizacao> obterCaminhoHierarquia(Long id) {
         Localizacao localizacao = localizacaoRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Localização não encontrada com id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Localização não encontrada com id: " + id));
         return localizacao.getCaminhoHierarquia();
+    }
+
+    // DTOs montados dentro da transação para evitar LazyInitializationException.
+    @Transactional(readOnly = true)
+    public Optional<LocalizacaoResponseDTO> buscarPorIdDTO(Long id) {
+        return localizacaoRepository.findById(id).map(LocalizacaoResponseDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<LocalizacaoResponseDTO> buscarPorCodigoDTO(String codigo) {
+        return localizacaoRepository.findByCodigo(codigo).map(LocalizacaoResponseDTO::fromEntity);
+    }
+
+    @Transactional(readOnly = true)
+    public List<LocalizacaoResponseDTO> listarTodasDTO() {
+        return localizacaoRepository.findAll().stream().map(LocalizacaoResponseDTO::fromEntity).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<LocalizacaoResponseDTO> listarRaizesDTO() {
+        return localizacaoRepository.findByLocalPaiIsNull().stream().map(LocalizacaoResponseDTO::fromEntity).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<LocalizacaoResponseDTO> listarFilhasDTO(Long localPaiId) {
+        return localizacaoRepository.findByLocalPaiId(localPaiId).stream().map(LocalizacaoResponseDTO::fromEntity).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<LocalizacaoResponseDTO> obterCaminhoDTO(Long id) {
+        Localizacao localizacao = localizacaoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Localização não encontrada com id: " + id));
+        return localizacao.getCaminhoHierarquia().stream().map(LocalizacaoResponseDTO::fromEntity).toList();
     }
 
     private void validarCodigoUnico(Localizacao localizacao) {

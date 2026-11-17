@@ -16,7 +16,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,7 +31,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/localizacoes")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Localizações", description = "Endpoints para gerenciamento do catálogo e hierarquia de localizações físicas")
 public class LocalizacaoController {
 
@@ -61,15 +59,12 @@ public class LocalizacaoController {
     public ResponseEntity<ApiResponse<List<LocalizacaoResponseDTO>>> listar(
             @RequestParam(required = false) String codigo) {
         if (codigo != null && !codigo.isBlank()) {
-            return localizacaoService.buscarPorCodigo(codigo)
-                    .map(loc -> ResponseEntity.ok(ApiResponse.success(List.of(LocalizacaoResponseDTO.fromEntity(loc)))))
+            return localizacaoService.buscarPorCodigoDTO(codigo)
+                    .map(loc -> ResponseEntity.ok(ApiResponse.success(List.of(loc))))
                     .orElse(ResponseEntity.ok(ApiResponse.success(List.of())));
         }
 
-        List<LocalizacaoResponseDTO> lista = localizacaoService.listarTodas()
-                .stream()
-                .map(LocalizacaoResponseDTO::fromEntity)
-                .toList();
+        List<LocalizacaoResponseDTO> lista = localizacaoService.listarTodasDTO();
 
         return ResponseEntity.ok(ApiResponse.success(lista));
     }
@@ -80,10 +75,7 @@ public class LocalizacaoController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lista de raízes retornada com sucesso")
     })
     public ResponseEntity<ApiResponse<List<LocalizacaoResponseDTO>>> listarRaizes() {
-        List<LocalizacaoResponseDTO> raizes = localizacaoService.listarRaizes()
-                .stream()
-                .map(LocalizacaoResponseDTO::fromEntity)
-                .toList();
+        List<LocalizacaoResponseDTO> raizes = localizacaoService.listarRaizesDTO();
         return ResponseEntity.ok(ApiResponse.success(raizes));
     }
 
@@ -95,9 +87,9 @@ public class LocalizacaoController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     })
     public ResponseEntity<ApiResponse<LocalizacaoResponseDTO>> buscarPorId(@PathVariable Long id) {
-        Localizacao localizacao = localizacaoService.buscarPorId(id)
+        LocalizacaoResponseDTO localizacao = localizacaoService.buscarPorIdDTO(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Localização não encontrada com ID: " + id));
-        return ResponseEntity.ok(ApiResponse.success(LocalizacaoResponseDTO.fromEntity(localizacao)));
+        return ResponseEntity.ok(ApiResponse.success(localizacao));
     }
 
     @GetMapping("/codigo/{codigo}")
@@ -108,9 +100,9 @@ public class LocalizacaoController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     })
     public ResponseEntity<ApiResponse<LocalizacaoResponseDTO>> buscarPorCodigo(@PathVariable String codigo) {
-        Localizacao localizacao = localizacaoService.buscarPorCodigo(codigo)
+        LocalizacaoResponseDTO localizacao = localizacaoService.buscarPorCodigoDTO(codigo)
                 .orElseThrow(() -> new ResourceNotFoundException("Localização não encontrada com código: " + codigo));
-        return ResponseEntity.ok(ApiResponse.success(LocalizacaoResponseDTO.fromEntity(localizacao)));
+        return ResponseEntity.ok(ApiResponse.success(localizacao));
     }
 
     @GetMapping("/{id}/filhas")
@@ -119,10 +111,7 @@ public class LocalizacaoController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lista de localizações filhas retornada")
     })
     public ResponseEntity<ApiResponse<List<LocalizacaoResponseDTO>>> listarFilhas(@PathVariable Long id) {
-        List<LocalizacaoResponseDTO> filhas = localizacaoService.listarFilhas(id)
-                .stream()
-                .map(LocalizacaoResponseDTO::fromEntity)
-                .toList();
+        List<LocalizacaoResponseDTO> filhas = localizacaoService.listarFilhasDTO(id);
         return ResponseEntity.ok(ApiResponse.success(filhas));
     }
 
@@ -134,10 +123,7 @@ public class LocalizacaoController {
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     })
     public ResponseEntity<ApiResponse<List<LocalizacaoResponseDTO>>> obterCaminho(@PathVariable Long id) {
-        List<LocalizacaoResponseDTO> caminho = localizacaoService.obterCaminhoHierarquia(id)
-                .stream()
-                .map(LocalizacaoResponseDTO::fromEntity)
-                .toList();
+        List<LocalizacaoResponseDTO> caminho = localizacaoService.obterCaminhoDTO(id);
         return ResponseEntity.ok(ApiResponse.success(caminho));
     }
 
@@ -164,6 +150,8 @@ public class LocalizacaoController {
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Localização removida com sucesso"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Localização não encontrada",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Localização possui filhas",
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     })
     public ResponseEntity<Void> excluir(@PathVariable Long id) {

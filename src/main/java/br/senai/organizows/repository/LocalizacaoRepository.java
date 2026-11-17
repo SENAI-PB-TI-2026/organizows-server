@@ -17,4 +17,6 @@ public interface LocalizacaoRepository extends JpaRepository<Localizacao, Long> 
     List<Localizacao> findByLocalPaiIsNull();
 
     List<Localizacao> findByLocalPaiId(Long localPaiId);
+
+    boolean existsByLocalPaiId(Long localPaiId);
 }

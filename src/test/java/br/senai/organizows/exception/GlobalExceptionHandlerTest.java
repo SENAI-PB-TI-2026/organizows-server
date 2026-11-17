@@ -84,7 +84,7 @@ class GlobalExceptionHandlerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
-                .andExpect(jsonPath("$.message").value("Parâmetro de consulta inválido"))
+                .andExpect(jsonPath("$.message").value("Parâmetro ou argumento inválido na requisição"))
                 .andExpect(jsonPath("$.path").value("/test/exceptions/illegal-argument"))
                 .andExpect(jsonPath("$.timestamp").value(notNullValue()));
     }

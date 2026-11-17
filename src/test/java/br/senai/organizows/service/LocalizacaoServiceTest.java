@@ -214,7 +214,7 @@ class LocalizacaoServiceTest {
                 .build();
 
         org.mockito.Mockito.when(mockRepo.findByCodigo("COD-CONCORRENTE")).thenReturn(java.util.Optional.empty());
-        org.mockito.Mockito.when(mockRepo.save(loc)).thenThrow(
+        org.mockito.Mockito.when(mockRepo.saveAndFlush(loc)).thenThrow(
                 new org.springframework.dao.DataIntegrityViolationException(
                         "Unique index or primary key violation: PUBLIC.UK_LOCALIZACAO_CODIGO"
                 )
@@ -237,7 +237,7 @@ class LocalizacaoServiceTest {
                 .build();
 
         org.mockito.Mockito.when(mockRepo.findByCodigo("COD-OUTRO")).thenReturn(java.util.Optional.empty());
-        org.mockito.Mockito.when(mockRepo.save(loc)).thenThrow(
+        org.mockito.Mockito.when(mockRepo.saveAndFlush(loc)).thenThrow(
                 new org.springframework.dao.DataIntegrityViolationException(
                         "Referential integrity constraint violation: FK_OUTRA_RESTRICAO"
                 )

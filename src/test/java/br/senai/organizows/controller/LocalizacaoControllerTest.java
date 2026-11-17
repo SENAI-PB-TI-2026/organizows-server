@@ -262,4 +262,19 @@ class LocalizacaoControllerTest {
         mockMvc.perform(get("/api/v1/localizacoes/{id}", salaSalva.getId()))
                 .andExpect(status().isNotFound());
     }
+    @Test
+    @DisplayName("Deve retornar 404 quando a localização do caminho não existe")
+    void deveRetornarNotFoundParaCaminhoInexistente() throws Exception {
+        mockMvc.perform(get("/api/v1/localizacoes/{id}/caminho", 999999L))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar exclusão de localização que possui filhas")
+    void deveRejeitarExclusaoDeLocalizacaoComFilhas() throws Exception {
+        mockMvc.perform(delete("/api/v1/localizacoes/{id}", predioSalvo.getId()))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409));
+    }
 }
