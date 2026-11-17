@@ -50,6 +50,24 @@ Para validação de conectividade, saúde da aplicação e metadados de execuç�
 
 ---
 
+## Endpoints do Catálogo de Localizações
+
+Gerenciamento do catálogo físico hierárquico (espaços, galpões, salas, armários, prateleiras):
+
+| Método | Endpoint | Descrição | Status Sucesso |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/localizacoes` | Cadastra uma nova localização | `201 Created` |
+| `GET` | `/api/v1/localizacoes` | Lista todas as localizações (filtro opcional: `?codigo=...`) | `200 OK` |
+| `GET` | `/api/v1/localizacoes/raizes` | Lista apenas as localizações de nível superior (sem pai) | `200 OK` |
+| `GET` | `/api/v1/localizacoes/{id}` | Busca os detalhes de uma localização por ID | `200 OK` |
+| `GET` | `/api/v1/localizacoes/codigo/{codigo}` | Busca os detalhes de uma localização por código | `200 OK` |
+| `GET` | `/api/v1/localizacoes/{id}/filhas` | Lista as localizações filhas diretas | `200 OK` |
+| `GET` | `/api/v1/localizacoes/{id}/caminho` | Retorna o caminho hierárquico ordenado da raiz até o nó | `200 OK` |
+| `PUT` | `/api/v1/localizacoes/{id}` | Atualiza dados cadastrais e vínculo de pai da localização | `200 OK` |
+| `DELETE` | `/api/v1/localizacoes/{id}` | Remove uma localização pelo seu identificador | `204 No Content` |
+
+---
+
 ## Padrão de Respostas e Convenções (Contrato de Integração)
 
 Todas as equipes devem seguir as convenções abaixo ao implementar novos controllers e serviços nas próximas sprints:
@@ -112,6 +130,16 @@ Tratamento centralizado pelo `GlobalExceptionHandler`:
 # Linux / macOS
 ./mvnw test
 ```
+
+---
+
+## Perfis de Ambiente e Segurança de Credenciais
+
+- **Perfil Padrão (`h2`):** Configurado como perfil default via `spring.profiles.default=h2`. Permite que novos desenvolvedores clonem o repositório e iniciem imediatamente a aplicação e testes com banco em memória H2 e migrações Flyway aplicadas automaticamente sem dependências externas.
+- **Perfis de Homologação/Produção:** O ambiente externo pode definir `SPRING_PROFILES_ACTIVE=prod` e injetar credenciais e chaves via variáveis de ambiente (`SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`).
+- **Segurança de Segredos:** Nenhuma senha, token ou chave de API deve ser versionada no repositório. O arquivo `.gitignore` já bloqueia `.env`, arquivos de credenciais e certificados.
+
+---
 
 ## Guia de Contribuição e Rastreabilidade
 

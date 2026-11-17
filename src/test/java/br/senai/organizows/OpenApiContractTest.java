@@ -31,6 +31,7 @@ class OpenApiContractTest {
                 .andExpect(jsonPath("$.info.title").value("OrganizoWS - API Backend"))
                 .andExpect(jsonPath("$.info.version").value("1.0.0"))
                 .andExpect(jsonPath("$.paths['/api/v1/status']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/localizacoes']").exists())
                 .andExpect(jsonPath("$.components.schemas.TechnicalStatusApiResponse.properties.success").exists())
                 .andExpect(jsonPath("$.components.schemas.TechnicalStatusApiResponse.properties.data").exists());
     }
