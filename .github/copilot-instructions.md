@@ -1,5 +1,7 @@
-# Instruções do GitHub Copilot — Organizows Server
+# GitHub Copilot — Organizows Server
 
-Siga as regras obrigatórias de [AGENTS.md](../AGENTS.md) e as convenções de [CONTRIBUTING.md](../CONTRIBUTING.md). Carregue a skill relevante de `.agents/skills/<nome>/SKILL.md` antes de implementar.
+Leia `AGENTS.md` e `CONTRIBUTING.md`. Utilize as skills em `.agents/skills/` conforme a tarefa.
 
-Não invente critérios Jira, resultados de testes, permissões, credenciais, migrations ou APIs. Use Java 25, Spring Boot e contratos vigentes na branch `develop`; mantenha a revisão humana obrigatória e não faça merge sem autorização.
+Este é um projeto educacional: priorize código simples, nomes expressivos, explicações breves e commits rastreáveis `[SCRUM-N]`. Não exija testes automatizados, pipelines, ferramentas ou padrões ainda não ensinados. Sugira-os como evolução, sem implementar automaticamente. Validações manuais e revisão dos colegas são suficientes nesta etapa quando os critérios permitem.
+
+Não altere `develop`, `main`, PRs, Jira ou configurações de build sem autorização.

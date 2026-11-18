@@ -1,96 +1,63 @@
-# Guia de Contribuição - Organizows Server
+# Guia de Contribuição — Organizows Server
 
-Este documento define as diretrizes e padrões de contribuição para o desenvolvimento do **Organizows Server**, garantindo a rastreabilidade das alterações, qualidade de código e alinhamento da equipe através de revisão cruzada.
+Este projeto é desenvolvido por alunos. O objetivo é praticar organização de código, Git, colaboração e documentação de entregas. Utilize também `AGENTS.md` e as skills em `.agents/skills/`.
 
----
+## 1. Branches
+- `main`: versão de referência publicada.
+- `develop`: integração das atividades.
+- Cada tarefa é desenvolvida em uma branch criada a partir de `develop`, com chave Jira: `feat/SCRUM-22-cadastro-material`, `fix/SCRUM-19-erro-consulta` ou `docs/SCRUM-28-guia`.
+- Não faça commit direto em `develop` e `main`. Abra PR para `develop` e peça revisão cruzada.
 
-## 1. Fluxo de Trabalho (Git Workflow)
-
-Adotamos um fluxo baseado em branches de funcionalidade integradas à branch de desenvolvimento:
-
-* **`main`**: Código estável e pronto para produção.
-* **`develop`**: Branch principal de integração e desenvolvimento contínuo.
-* **Branches de funcionalidade / correção**: Criadas a partir de `develop` e mescladas de volta via **Pull Request (PR)** após revisão cruzada.
-
-### Nomenclatura de Branches
-As branches devem conter a chave do ticket Scrum correspondente:
-* **Novas funcionalidades**: `feat/SCRUM-<numero>-descricao-curta` ou `SCRUM-<numero>-nome-descricao`
-* **Correções de bugs**: `fix/SCRUM-<numero>-descricao-curta`
-* **Documentação / Configuração**: `docs/SCRUM-<numero>-descricao-curta` ou `chore/SCRUM-<numero>-descricao-curta`
-
-Exemplo:
-```bash
-git checkout -b feat/SCRUM-28-rastreabilidade-commits-e-revisao
-```
-
----
-
-## 2. Convenção de Commits (Conventional Commits + SCRUM)
-
-Todos os commits devem seguir a especificação do **[Conventional Commits](https://www.conventionalcommits.org/)** combinada com a identificação obrigatória da tarefa Scrum `[SCRUM-N]`.
-
-### Formato Obrigatório
-
+## 2. Commits
+Formato obrigatório:
 ```text
-<tipo>(<escopo opcional>): [SCRUM-N] <descrição concisa no imperativo>
-
-[corpo opcional com detalhes adicionais]
-
-[rodapé opcional com referências ou breaking changes]
+tipo(escopo): [SCRUM-N] descrição objetiva
 ```
 
-### Tipos Permitidos
+Tipos mais usados:
+- `feat`: nova função;
+- `fix`: correção;
+- `docs`: documentação;
+- `refactor`: organização do código sem mudar a função;
+- `style`: formatação sem mudar o comportamento;
+- `chore`: manutenção;
+- `build`: mudança no processo de compilação/dependência.
+Outros tipos de Conventional Commits podem ser utilizados quando fizerem sentido.
 
-| Tipo | Descrição |
-| :--- | :--- |
-| `feat` | Uma nova funcionalidade adicionada ao sistema. |
-| `fix` | Correção de um bug ou erro. |
-| `docs` | Alterações exclusivas na documentação. |
-| `style` | Alterações de formatação, pontuação, sem alteração de lógica de código. |
-| `refactor` | Refatoração de código que não altera comportamento nem adiciona funcionalidade. |
-| `perf` | Melhoria de desempenho. |
-| `test` | Adição ou correção de testes automatizados. |
-| `build` | Alterações que afetam o sistema de build ou dependências (ex.: `pom.xml`, Maven). |
-| `ci` | Alterações em scripts ou configurações de integração contínua. |
-| `chore` | Tarefas rotineiras, ferramentas, manutenção de infraestrutura sem impacto no código. |
+Exemplos:
+```text
+feat(materiais): [SCRUM-22] adicionar cadastro de materiais
+fix(localizacao): [SCRUM-19] tratar codigo inexistente
+docs(readme): [SCRUM-28] documentar convencoes do projeto
+```
 
-### Exemplos Válidos
+Evite mensagens `ajustes`, `final teste`, `pronto` ou `mudanças`. Cada commit deve conter alterações relacionadas à mensagem. Consulte a skill `commit-message` antes de finalizar.
 
-* `feat(materiais): [SCRUM-6] adicionar cadastro de materiais e validacao de saldo`
-* `fix(auth): [SCRUM-15] corrigir expiracao de token jwt`
-* `docs(contribuicao): [SCRUM-28] documentar guia de contribuicao e padrao de commits`
-* `test(localizacao): [SCRUM-18] adicionar testes unitarios para LocalizacaoRepository`
+## 3. Como programar
+- Leia o código semelhante já existente e siga a organização `model`, `repository`, `service`, `controller` e `dto`.
+- Use nomes claros; evite duplicação de código e responsabilidades misturadas.
+- Não modifique `pom.xml`, a versão Java ou configurações centrais sem necessidade e orientação.
+- Valide entradas e situações de erro, conforme requisitos do cartão.
+- Não adicione senhas, arquivos locais, código temporário ou mudanças de outro trabalho ao commit.
 
----
+## 4. Verificação nesta fase
+**Testes automatizados não são exigidos nesta etapa do curso.** O aluno deve verificar manualmente o que implementou, quando o ambiente permitir. Exemplos: iniciar a aplicação, chamar endpoint pelo Swagger/Postman, confirmar resultado esperado e testar um caso inválido.
 
-## 3. Pull Requests (PRs) e Critérios de Integração
+No PR, documente **o que foi efetivamente verificado**. Se não conseguiu executar, descreva o impedimento sem inventar resultados. Requisitos de testes automatizados e CI só entram quando ensinados ou explicitamente solicitados pelo professor.
 
-Nenhum desenvolvedor deve fazer commit direto ou merge direto na branch `develop` ou `main`. Todo código entra via Pull Request.
+## 5. Pull Requests
+Para enviar uma atividade:
+1. Abra PR de sua branch para `develop` usando `.github/pull_request_template.md`.
+2. Inclua cartão Jira, resumo do trabalho e instruções de verificação manual.
+3. Revise `git diff` e `git status` e retire arquivos fora do escopo.
+4. Solicite revisão por outro integrante. A aprovação por outro colega é regra de equipe; sua obrigatoriedade automática requer configuração de branch protection/ruleset no GitHub.
+5. Só realize merge após aprovação e autorização.
 
-### Requisitos do Pull Request
-Ao abrir um PR para `develop`, o autor **deve**:
-1. Utilizar o template padrão de PR (`.github/pull_request_template.md`).
-2. Indicar o link direto para a tarefa correspondente no Jira / Scrum Board.
-3. Descrever claramente o objetivo e o que foi implementado.
-4. Anexar **evidência básica de teste** (logs do Maven, prints de testes executados, resposta de endpoints no Postman/Swagger, etc.).
-5. Confirmar que a suíte de testes locais foi executada com sucesso (`mvn test` ou `./mvnw test`).
+## 6. Critérios para revisão
+- Entrega atende ao Jira?
+- Código é compreensível e segue os exemplos do projeto?
+- O PR documenta o que foi implementado e como conferir?
+- Não foram incluídos segredos, mudanças de IDE ou alterações sem relação com o ticket?
+- O autor explicou erros, limitações ou pontos incompletos?
 
----
-
-## 4. Revisão Cruzada de Integração (Code Review)
-
-O fluxo da equipe **exige revisão e aprovação de outro integrante antes do merge em `develop`**. Esta política, quando apenas documentada, **não é aplicada automaticamente pelo GitHub**: o administrador do repositório deve configurar um **ruleset/proteção de branch** exigindo pelo menos uma aprovação e, se aplicável, verificações obrigatórias. Até a regra estar ativa, os mantenedores devem cumprir a revisão manualmente.
-
-### Checklist do Autor antes de solicitar revisão:
-- [ ] O código segue as convenções e padrões do projeto.
-- [ ] As mensagens de commit contêm o identificador `[SCRUM-N]`.
-- [ ] O template de Pull Request foi completamente preenchido com descrição e evidência de testes.
-- [ ] O projeto compila sem erros e todos os testes estão passando (`./mvnw clean test`).
-- [ ] Não foram incluídos arquivos temporários, senhas, chaves de API ou código comentado.
-
-### Checklist do Revisor (Revisão Cruzada):
-- [ ] O código atende aos critérios de aceite definidos na tarefa Scrum.
-- [ ] A arquitetura e boas práticas do Spring Boot e Java foram respeitadas.
-- [ ] A evidência de testes é válida e suficiente para comprovar o funcionamento.
-- [ ] O código é legível, manutenível e não apresenta riscos óbvios de segurança.
-- [ ] Aprovação explícita concedida no Pull Request.
+Não confunda o funcionamento manual com a garantia de prontidão para produção: testes e verificações adicionais serão introduzidos ao longo do curso.

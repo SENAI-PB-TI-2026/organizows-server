@@ -1,28 +1,33 @@
-# Skills compartilhadas — Organizows Server
+# Skills compartilhadas para os alunos — Organizows
 
-Estas skills ficam versionadas no repositório para que quem clonar o projeto tenha as mesmas instruções. Não é necessário copiá-las para diretórios pessoais.
+Estas instruções são versionadas no projeto e podem ser reutilizadas por agentes que suportam skills de repositório. Elas **não substituem o conteúdo de aula, o código que já existe nem a revisão dos colegas**.
 
-## Compatibilidade
-- Codex e Google Antigravity: diretório `.agents/skills/<nome>/SKILL.md`.
-- GitHub Copilot: suporte a skills compatíveis; este repositório também inclui `.github/copilot-instructions.md`.
-- `AGENTS.md` contém regras permanentes; cada skill fornece instruções **sob demanda**, reduzindo contexto e repetição.
+## O que é esperado nesta etapa do curso
+- Mensagens de commit com padrão e número do cartão SCRUM.
+- Código Java/Spring Boot claro e organizado.
+- Mudanças pequenas, em branch própria, integradas via PR para `develop`.
+- Descrição do que foi feito e **verificação manual** no Swagger/Postman quando pertinente.
+- Não exigir testes automatizados ou CI; esses assuntos serão introduzidos em momento oportuno.
 
 ## Como usar
-1. Faça `git pull` da branch que já contém as skills (após merge em `develop`).
-2. Abra **a raiz** de `organizows-server` no editor com o agente; reinicie a sessão do agente se as skills não aparecerem.
-3. Descreva a tarefa com chave Jira e critérios. Exemplo: "Implemente SCRUM-22 seguindo jira-task-delivery, flyway-data-integrity e test-and-verify".
-4. Em Codex, é possível chamar a skill diretamente quando disponível, por exemplo `$jira-task-delivery`. Em outros agentes, solicite a leitura do `SKILL.md` pertinente.
-5. Execute comandos e testes localmente; os agentes não substituem revisão cruzada nem CI.
+1. Após o merge deste PR, atualize sua branch com as mudanças de `develop`.
+2. Abra a raiz do projeto no editor e reinicie a sessão do agente, se necessário.
+3. Peça a utilização da skill necessária ou solicite a leitura de seu `SKILL.md`.
 
-## Catálogo
-| Skill | Uso |
+| Skill | Quando usar |
 | --- | --- |
-| `jira-task-delivery` | Planejamento e aceitação Jira |
-| `spring-api-patterns` | API, DTO, service, HTTP |
-| `flyway-data-integrity` | JPA, schema, migrations |
-| `inventory-concurrency` | Estoque e transações |
-| `test-and-verify` | Testes e pré-produção |
-| `pull-request-review` | Revisão técnica de PR |
+| `commit-message` | Criar mensagens de commit específicas e padronizadas |
+| `java-spring-basics` | Desenvolver Java e Spring Boot no padrão do projeto |
+| `git-pr-workflow` | Criar branch, preparar commits e abrir PR |
+| `jira-task-planning` | Transformar tarefas do Jira em pequenos passos |
 
-## Política de manutenção
-Atualizar as skills em PR com revisão cruzada. A prática documentada não garante qualidade sozinha: regras de branch, CI, testes e avaliação humana continuam necessários. Ajustar conteúdo quando versões, contratos ou modelagem do projeto mudarem.
+Exemplo de pedido:
+> Vou trabalhar na SCRUM-22. Use jira-task-planning e java-spring-basics para me orientar, respeitando AGENTS.md. No fim, sugira como validar manualmente e uma mensagem de commit com commit-message.
+
+## Compatibilidade
+As skills usam `.agents/skills/<nome>/SKILL.md` para agentes que reconheçam esse formato. Há instruções adicionais para GitHub Copilot em `.github/copilot-instructions.md`. Caso um agente não carregue skills automaticamente, peça para ler o arquivo diretamente.
+
+## Limites
+Agentes podem errar; confira o diff antes de commitar. Não permita que o agente envie credenciais, altere `develop` ou faça merge sem autorização. O professor deve revisar a abordagem, principalmente se ela envolver conteúdo não ensinado.
+
+Estas orientações evoluem com o curso: automação, testes e CI poderão ser introduzidos **depois**, em PR próprio.
