@@ -1,31 +1,26 @@
-## 📌 Descrição
-<!-- Descreva de forma concisa o objetivo deste Pull Request e as alterações realizadas. -->
+## 📌 O que foi feito
+<!-- Explique em poucas frases a funcionalidade ou correção. -->
 
-## 🔗 Tarefa Vinculada
-- **Jira**: https://team-senai.atlassian.net/browse/SCRUM-XXX <!-- Substitua XXX -->
+## 🔗 Tarefa Jira
+<!-- Informe a chave e o link, como SCRUM-22 -->
+- Cartão:
 
-## 🛠 Tipo de Alteração
-- [ ] `feat` (funcionalidade)
-- [ ] `fix` (correção)
-- [ ] `refactor` (refatoração)
-- [ ] `docs` (documentação)
-- [ ] `test` (testes)
-- [ ] `chore` / `build` / `ci` (infraestrutura)
+## 🗂 Arquivos e mudanças principais
+<!-- Ex.: MaterialController.java: cria endpoint de cadastro. -->
 
-## 🧪 Testes e evidências
-- **Comando realmente executado**: <!-- Ex.: ./mvnw clean test; ou "Não executado" -->
-- **Resultado real**: <!-- Aprovado / Falhou / Não executado / Não se aplica (justificar) -->
-- **Evidência**: <!-- Log, URL de workflow, screenshot ou justificativa -->
+## 🔎 Como conferir manualmente
+<!-- Indique passos simples, o resultado esperado e o que você realmente executou. -->
+1.
+2.
 
-## ✅ Checklist do autor
-- [ ] Commits mencionam `[SCRUM-N]` e seguem Conventional Commits.
-- [ ] Descrição e link do Jira preenchidos.
-- [ ] Critérios de aceite descritos e demonstrados.
-- [ ] Build e testes executados, ou limitação explicitada.
-- [ ] Nenhuma credencial ou arquivo temporário adicionado.
+- Resultado observado: <!-- Descreva ou informe "não executado" e o motivo -->
 
-## 👥 Revisão cruzada
-- [ ] Aprovado por outro integrante da equipe.
-- **Revisor**: <!-- @usuario -->
-- **Evidência de aprovação**: <!-- Link da revisão -->
-<!-- O checklist não impede merges sozinho. A obrigatoriedade técnica depende das regras de proteção de branch/ruleset configuradas no GitHub. -->
+## ✅ Checklist
+- [ ] Minha branch foi criada a partir de `develop`.
+- [ ] Os commits usam `tipo(escopo): [SCRUM-N] descrição`.
+- [ ] O PR atende aos critérios combinados da tarefa.
+- [ ] Revisei as alterações e não incluí arquivos pessoais/segredos.
+- [ ] Informei como conferir a funcionalidade manualmente.
+- [ ] Solicitei revisão de outro integrante.
+
+> Testes automatizados não são exigidos nesta etapa do curso. Não declare uma validação que não executou.
