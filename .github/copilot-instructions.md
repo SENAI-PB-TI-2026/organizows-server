@@ -7,3 +7,5 @@ Este é um projeto educacional: priorize código simples, nomes expressivos, exp
 Não altere `develop`, `main`, PRs, Jira ou configurações de build sem autorização.
 
 Autenticação e autorização ainda **não foram ministradas**. Não implemente Spring Security, JWT, login, usuário/senha, roles ou regras de permissão espontaneamente. Se um ticket pedir isso, documente como dependência pedagógica e aguarde orientação expressa do professor. Nunca trate uma API com escrita pública como pronta para produção.
+
+Quando o aluno colar uma descrição de cartão Jira, **não exija integração Jira**: identifique `SCRUM-N` e o bloco `Instruções para o agente`, siga `AGENTS.md` e `git-pr-workflow` para partir da `develop` limpa e criar a branch local `feature/SCRUM-N-slug` antes de implementar. Somente commit, push e PR exigem confirmação do aluno.

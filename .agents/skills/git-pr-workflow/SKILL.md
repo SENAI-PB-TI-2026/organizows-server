@@ -23,3 +23,10 @@ description: Orientar estudantes do Organizows a criar branches a partir de deve
 
 ## Checagem de escopo pedagógico antes de abrir PR
 Verifique se o diff introduziu autenticação/autorização não solicitada ou requisitos ainda não ministrados. Se sim, pare e explique a necessidade de alinhamento com o professor antes de incluir tais mudanças. Não declare segurança para uso público sem verificação adequada.
+
+## Fluxo automático para descrição colada do Jira
+O ponto de partida esperado é uma `develop` local **limpa**. Ao receber a descrição da tarefa, identifique o bloco "Instruções para o agente" e, **antes de implementar**, extraia `Chave`, `Branch sugerida`, `Tipo` e `Objetivo`. Não exija acesso à API Jira. Confirme a situação atual com `git status --short`, `git branch --show-current` e `git fetch origin`; atualize `develop` com `git pull --ff-only origin develop`; verifique a inexistência da branch local/remota; então crie com `git switch -c feature/SCRUM-N-descricao-curta` (ou o prefixo indicado). Nunca faça essa troca com alterações locais não preservadas. O aluno não precisa pedir separadamente a criação da branch: ela faz parte do início do trabalho; só commit, push, PR e merge requerem autorização explícita.
+
+**Padrão inspirado na aula:** `feature/` para funcionalidades novas, `fix/` para correções, `docs/` para documentação, `chore/` para manutenção. Acrescente sempre `SCRUM-N` e um slug curto. Exemplo: `feature/SCRUM-22-persistencia-materiais`. O branch `feat/` é legado aceito quando já existe e não deve ser recriado apenas para renomear.
+
+Quando houver alterações locais, oriente opções seguras: salvar em branch própria ou `git stash push -m "trabalho antes de SCRUM-N"` com autorização; ao retomar, `git stash list` e `git stash pop` com cuidado. Nunca descarte alterações usando `git reset --hard` ou `git clean -fd`. Não faça merge local para `develop` sem PR.

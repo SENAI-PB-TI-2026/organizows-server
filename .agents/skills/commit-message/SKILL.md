@@ -7,7 +7,7 @@ description: Criar ou revisar mensagens de commit para tarefas SCRUM do Organizo
 
 ## Formato obrigatório
 ```text
-tipo(escopo): [SCRUM-N] descrição curta no infinitivo
+tipo(escopo): [SCRUM-N] descrição curta com verbo no imperativo
 ```
 
 Exemplos:
@@ -25,6 +25,13 @@ Tipos: `feat` (funcionalidade), `fix` (correção), `docs` (documentação), `re
 3. Se houver mudanças de objetivos distintos, **sugira commits separados** e explique quais arquivos vão em cada um.
 4. Proponha **uma mensagem específica** para as alterações realmente preparadas; não use "ajustes", "final teste", "implementando" nem mensagens genéricas.
 5. Nunca execute `git add .`, `git commit`, push ou force-push sem autorização; se autorizado, inclua somente arquivos pertinentes e mostre mensagem final.
+
+## Padrão ensinado na aula
+Em mensagens de commit use verbo de ação no imperativo (ex.: `cria`, `corrige`, `adiciona`, `atualiza`), nunca gerúndio ou particípio. A rastreabilidade da turma acrescenta `[SCRUM-N]` ao Conventional Commit, entre os dois pontos e a descrição.
+
+A mensagem de commit **não deve ser copiada mecanicamente** de `Commit sugerido` no Jira: valide o que foi realmente alterado. Se `feat` no bloco da tarefa virou correção de bug, use `fix`; registre o mesmo `SCRUM-N`.
+Se o aluno digitou a mensagem errada num commit **ainda não enviado**, explique `git commit --amend -m "mensagem corrigida"`, com autorização. Em commits já enviados, não reescreva o histórico compartilhado.
+Em branches, use `feature/` para nova funcionalidade (conforme material da aula), enquanto o tipo de commit equivalente é `feat`.
 
 ## Lista rápida
 - Tipo corresponde à mudança?

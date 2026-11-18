@@ -16,3 +16,6 @@ description: Traduzir tarefas Jira SCRUM e seus critérios de aceite em pequenos
 
 ## Critérios relacionados a login e permissões
 Se o cartão tratar de login, senha, autenticação ou autorização, informe que o conteúdo ainda não foi ensinado e sinalize a dependência de orientação do professor. Não mude o status do cartão nem gere implementação de autenticação improvisada. Para outras tarefas, não acrescente autenticação como escopo extra.
+
+## Quando o aluno cola a descrição do cartão
+Não presuma integração com Jira. Leia o texto integral copiado pelo aluno e extraia: chave `SCRUM-N`, título, objetivo, entregas, critérios, dependências e bloco `Instruções para o agente`. As informações de `Branch sugerida` e `Commit sugerido` são **orientações**, nunca substitutos dos critérios originais nem comprovação do que foi feito. Passe a chave e a branch à skill `git-pr-workflow` para criar a branch local antes de modificar o código. Se faltar algum item essencial, pergunte apenas o necessário.

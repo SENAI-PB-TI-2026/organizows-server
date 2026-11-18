@@ -37,3 +37,12 @@ Nenhuma equipe trabalhou ainda com **autenticação ou autorização**. Portanto
 
 ### Boas práticas aproveitadas de outra equipe
 Foram identificadas instruções de agentes do repositório `minha-sala-server` (branch `feat/SCRUM-216`): divisão de responsabilidades por camada, convenção de verbos em commits, roteiro CRUD, explicitação de dúvidas importantes e autorização humana para operações Git. Aplicar essas ideias adaptadas ao OrganizoWS, sem copiar proibições de domínio de outro projeto ou introduzir exigências de testes automatizados nesta etapa.
+
+## Fluxo recomendado: o aluno cola a tarefa
+O aluno **não precisa conectar o agente ao Jira**. Na branch `develop` limpa, copie toda a descrição do cartão e escreva "Implemente esta atividade". O agente deverá criar uma branch local a partir de `develop` usando o bloco de instruções incluído em cada cartão pendente. Ele não deve criar commits ou fazer push sem autorização. A chave Jira identifica tanto a branch quanto o commit.
+
+Exemplo:
+- Branch: `feature/SCRUM-22-persistencia-materiais`
+- Commit após a implementação e autorização: `feat(materiais): [SCRUM-22] cria persistencia de materiais`
+
+Os PDFs usados em sala distinguem branch `feature/` (isolamento do trabalho) e commit `feat` (nova funcionalidade). A descrição deve usar verbo no imperativo, não `criando` ou `criado`. O bloco do Jira dá uma sugestão; a mensagem final deve descrever as alterações efetivamente realizadas. Se o aluno trabalha na mesma tarefa em branch já existente, reutilize-a em vez de duplicar.

@@ -5,7 +5,7 @@ Este projeto é desenvolvido por alunos. O objetivo é praticar organização de
 ## 1. Branches
 - `main`: versão de referência publicada.
 - `develop`: integração das atividades.
-- Cada tarefa é desenvolvida em uma branch criada a partir de `develop`, com chave Jira: `feat/SCRUM-22-cadastro-material`, `fix/SCRUM-19-erro-consulta` ou `docs/SCRUM-28-guia`.
+- Cada tarefa é desenvolvida em uma branch criada a partir de `develop`, com chave Jira: `feature/SCRUM-22-cadastro-material`, `fix/SCRUM-19-erro-consulta` ou `docs/SCRUM-28-guia`.
 - Não faça commit direto em `develop` e `main`. Abra PR para `develop` e peça revisão cruzada.
 
 ## 2. Commits
@@ -64,3 +64,11 @@ Não confunda o funcionamento manual com a garantia de prontidão para produçã
 
 ## 7. Escopo pedagógico de autenticação/autorização
 Ainda não foram ministrados login, autenticação, autorização e papéis de usuário. Não adicione Spring Security, JWT, tokens, senha ou controle de permissões como parte de atividades comuns. Caso um cartão do Jira trate especificamente desses conteúdos, consulte o professor antes de começar; os cartões não devem ser considerados automaticamente concluídos ou excluídos. O protótipo sem controles de acesso **não deve ser exposto como aplicação de produção**.
+
+## 8. Começar uma tarefa no agente a partir da develop
+1. Abra o projeto na branch **`develop`** e verifique se não há alterações locais pendentes.
+2. Abra seu cartão no Jira, **copie a descrição inteira**, incluindo `Instruções para o agente`, e cole no Codex, Antigravity ou Copilot com o pedido de implementação.
+3. O agente identifica a chave `SCRUM-N`, tipo e assunto; verifica o estado do Git, atualiza `develop` com `git pull --ff-only` e cria **automaticamente a branch local**, usando `feature/SCRUM-N-slug`, `fix/SCRUM-N-slug`, `docs/SCRUM-N-slug` ou `chore/SCRUM-N-slug`. Se houver alterações não salvas ou branch já existente, ele deve parar e orientar.
+4. O agente desenvolve **na branch da tarefa**, nunca diretamente em `develop`, e só prepara commit/push/PR com autorização do aluno.
+5. Mensagem de commit: `feat(escopo): [SCRUM-N] cria ...`, `fix(escopo): [SCRUM-N] corrige ...`; respeitar o **verbo no imperativo**, conforme o material de aula.
+6. Os cartões de outras sprints, tarefas de outros responsáveis e itens sobre conteúdos ainda não ministrados não devem ser iniciados automaticamente.
