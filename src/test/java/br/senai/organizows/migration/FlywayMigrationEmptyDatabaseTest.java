@@ -49,7 +49,7 @@ class FlywayMigrationEmptyDatabaseTest {
 
         assertThat(result.success).isTrue();
         assertThat(result.migrationsExecuted).isGreaterThanOrEqualTo(1);
-        assertThat(result.targetSchemaVersion).isEqualTo("1");
+        assertThat(result.targetSchemaVersion).isEqualTo("4");
 
         // Validar que a tabela e todas as colunas foram criadas corretamente
         try (Connection conn = dataSource.getConnection()) {
