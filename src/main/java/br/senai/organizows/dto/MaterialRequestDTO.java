@@ -6,20 +6,34 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class MaterialRequestDTO {
 
+    @NotBlank(message = "O código do material é obrigatório")
+    @Size(max = 50)
+    private String codigo;
+
+    @NotBlank(message = "O nome do material é obrigatório")
+    @Size(max = 150)
+    private String nome;
+
     @NotBlank(message = "A descrição do material é obrigatória")
-    @Size(max = 150, message = "A descrição deve ter no máximo 150 caracteres")
+    @Size(max = 150)
     private String descricao;
+
+    @Size(max = 500)
+    private String caracteristicas;
+
+    @NotBlank(message = "O grupo do material é obrigatório")
+    @Size(max = 80)
+    private String grupo;
+
+    @Size(max = 80)
+    private String subgrupo;
 
     @NotNull(message = "A categoria do material é obrigatória")
     private CategoriaMaterial categoria;
@@ -27,6 +41,7 @@ public class MaterialRequestDTO {
     @NotNull(message = "O status do material é obrigatório")
     private StatusMaterial status;
 
+    @NotNull(message = "A localização do material é obrigatória")
     private Long localId;
 
     @NotNull(message = "A quantidade disponível é obrigatória")

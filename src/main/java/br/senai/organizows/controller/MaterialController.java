@@ -1,7 +1,9 @@
 package br.senai.organizows.controller;
 
+import br.senai.organizows.dto.AjusteSaldoRequestDTO;
 import br.senai.organizows.dto.MaterialRequestDTO;
 import br.senai.organizows.dto.MaterialResponseDTO;
+import br.senai.organizows.dto.response.ApiResponse;
 import br.senai.organizows.service.MaterialService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -11,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/materiais")
+@RequestMapping("/api/v1/materiais")
 public class MaterialController {
 
     private final MaterialService materialService;
@@ -21,25 +23,30 @@ public class MaterialController {
     }
 
     @PostMapping
-    public ResponseEntity<MaterialResponseDTO> criar(@Valid @RequestBody MaterialRequestDTO dto) {
-        MaterialResponseDTO criado = materialService.criar(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(criado);
+    public ResponseEntity<ApiResponse<MaterialResponseDTO>> criar(@Valid @RequestBody MaterialRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Material criado com sucesso", materialService.criar(dto)));
     }
 
     @GetMapping
-    public ResponseEntity<List<MaterialResponseDTO>> listarTodos() {
-        return ResponseEntity.ok(materialService.listarTodos());
+    public ResponseEntity<ApiResponse<List<MaterialResponseDTO>>> listarTodos(
+            @RequestParam(required = false) String grupo) {
+        List<MaterialResponseDTO> materiais = (grupo == null || grupo.isBlank())
+                ? materialService.listarTodos()
+                : materialService.listarPorGrupo(grupo);
+        return ResponseEntity.ok(ApiResponse.success(materiais));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MaterialResponseDTO> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(materialService.buscarPorId(id));
+    public ResponseEntity<ApiResponse<MaterialResponseDTO>> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(materialService.buscarPorId(id)));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MaterialResponseDTO> atualizar(@PathVariable Long id,
-                                                         @Valid @RequestBody MaterialRequestDTO dto) {
-        return ResponseEntity.ok(materialService.atualizar(id, dto));
+    public ResponseEntity<ApiResponse<MaterialResponseDTO>> atualizar(
+            @PathVariable Long id, @Valid @RequestBody MaterialRequestDTO dto) {
+        return ResponseEntity.ok(ApiResponse.success("Material atualizado com sucesso",
+                materialService.atualizar(id, dto)));
     }
 
     @DeleteMapping("/{id}")
@@ -48,9 +55,15 @@ public class MaterialController {
         return ResponseEntity.noContent().build();
     }
 
-    // Endpoint do critério de aceite: Alerta de reposição (itens abaixo ou igual ao mínimo)
     @GetMapping("/alerta-reposicao")
-    public ResponseEntity<List<MaterialResponseDTO>> listarAlertaReposicao() {
-        return ResponseEntity.ok(materialService.listarAlertaReposicao());
+    public ResponseEntity<ApiResponse<List<MaterialResponseDTO>>> listarAlertaReposicao() {
+        return ResponseEntity.ok(ApiResponse.success(materialService.listarAlertaReposicao()));
+    }
+
+    @PostMapping("/{id}/ajuste-saldo")
+    public ResponseEntity<ApiResponse<MaterialResponseDTO>> ajustarSaldo(
+            @PathVariable Long id, @Valid @RequestBody AjusteSaldoRequestDTO dto) {
+        return ResponseEntity.ok(ApiResponse.success("Saldo ajustado com sucesso",
+                materialService.ajustarSaldo(id, dto.getDeltaQuantidade())));
     }
 }

@@ -1,0 +1,5 @@
+# <tipo>(<escopo>): [SCRUM-N] <descrição concisa no imperativo>
+# Exemplo: feat(material): [SCRUM-6] cadastrar novos tipos de insumos
+#
+# Tipos: feat, fix, docs, style, refactor, perf, test, build, ci, chore
+# Lembre-se: Sempre incluir o identificador [SCRUM-N] da tarefa relacionada.

@@ -16,14 +16,16 @@ import java.util.Optional;
 @Repository
 public interface MaterialRepository extends JpaRepository<Material, Long> {
 
-    // Bloqueio pessimista para evitar concorrência no ajuste de saldo
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT m FROM Material m WHERE m.id = :id")
     Optional<Material> findByIdForUpdate(@Param("id") Long id);
 
-    // Consulta para o alerta de reposição: retorna apenas itens com saldo menor ou igual ao mínimo
     @Query("SELECT m FROM Material m WHERE m.quantidadeDisponivel <= m.quantidadeMinima")
     List<Material> findMateriaisParaReposicao();
+
+    Optional<Material> findByCodigo(String codigo);
+
+    List<Material> findByGrupoIgnoreCase(String grupo);
 
     List<Material> findByCategoria(CategoriaMaterial categoria);
 

@@ -3,7 +3,6 @@ package br.senai.organizows.model;
 import br.senai.organizows.enums.CategoriaMaterial;
 import br.senai.organizows.enums.StatusMaterial;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,15 +14,29 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public class Material {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true, length = 50)
+    private String codigo;
+
+    @Column(nullable = false, length = 150)
+    private String nome;
+
     @Column(nullable = false, length = 150)
     private String descricao;
+
+    @Column(length = 500)
+    private String caracteristicas;
+
+    @Column(nullable = false, length = 80)
+    private String grupo;
+
+    @Column(length = 80)
+    private String subgrupo;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
@@ -33,9 +46,9 @@ public class Material {
     @Column(nullable = false, length = 30)
     private StatusMaterial status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "local_id")
-    private Local local;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "localizacao_id", nullable = false)
+    private Localizacao localizacao;
 
     @Column(name = "quantidade_disponivel", nullable = false)
     private Integer quantidadeDisponivel = 0;
@@ -61,6 +74,6 @@ public class Material {
     }
 
     public Long getLocalId() {
-        return this.local != null ? this.local.getId() : null;
+        return localizacao == null ? null : localizacao.getId();
     }
 }
