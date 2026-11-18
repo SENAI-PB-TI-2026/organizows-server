@@ -277,4 +277,133 @@ class LocalizacaoControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409));
     }
+
+    @Test
+    @DisplayName("Deve impedir criação de localização filha com pai inexistente (HTTP 404)")
+    void deveImpedirCriacaoDeLocalizacaoFilhaComPaiInexistente() throws Exception {
+        LocalizacaoRequestDTO dto = LocalizacaoRequestDTO.builder()
+                .codigo("ORFAO-01")
+                .nome("Filha Órfã")
+                .tipo("Caixa")
+                .localPaiId(999999L)
+                .build();
+
+        mockMvc.perform(post("/api/v1/localizacoes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value(containsString("Localização pai não encontrada")));
+    }
+
+    @Test
+    @DisplayName("Deve cadastrar cadeia completa de armário, prateleira, coluna, fileira e caixa/gaveta com endereço identificável")
+    void deveCadastrarCadeiaCompletaComEnderecoIdentificavel() throws Exception {
+        // 1. Armário (Raiz)
+        LocalizacaoRequestDTO armDto = LocalizacaoRequestDTO.builder()
+                .codigo("ARM-METAL-01")
+                .nome("Armário de Componentes")
+                .tipo("Armário")
+                .descricao("Armário metálico principal")
+                .build();
+
+        String armResStr = mockMvc.perform(post("/api/v1/localizacoes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(armDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.enderecoCompleto").value("Armário de Componentes"))
+                .andExpect(jsonPath("$.data.enderecoCodigoCompleto").value("ARM-METAL-01"))
+                .andReturn().getResponse().getContentAsString();
+
+        Long armId = objectMapper.readTree(armResStr).path("data").path("id").asLong();
+
+        // 2. Prateleira (Filha do Armário)
+        LocalizacaoRequestDTO pratDto = LocalizacaoRequestDTO.builder()
+                .codigo("PRAT-01")
+                .nome("Prateleira Superior")
+                .tipo("Prateleira")
+                .localPaiId(armId)
+                .build();
+
+        String pratResStr = mockMvc.perform(post("/api/v1/localizacoes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(pratDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.enderecoCompleto").value("Armário de Componentes > Prateleira Superior"))
+                .andReturn().getResponse().getContentAsString();
+
+        Long pratId = objectMapper.readTree(pratResStr).path("data").path("id").asLong();
+
+        // 3. Coluna (Filha da Prateleira)
+        LocalizacaoRequestDTO colDto = LocalizacaoRequestDTO.builder()
+                .codigo("COL-01")
+                .nome("Coluna 1")
+                .tipo("Coluna")
+                .localPaiId(pratId)
+                .build();
+
+        String colResStr = mockMvc.perform(post("/api/v1/localizacoes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(colDto)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Long colId = objectMapper.readTree(colResStr).path("data").path("id").asLong();
+
+        // 4. Fileira (Filha da Coluna)
+        LocalizacaoRequestDTO filDto = LocalizacaoRequestDTO.builder()
+                .codigo("FIL-A")
+                .nome("Fileira A")
+                .tipo("Fileira")
+                .localPaiId(colId)
+                .build();
+
+        String filResStr = mockMvc.perform(post("/api/v1/localizacoes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(filDto)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Long filId = objectMapper.readTree(filResStr).path("data").path("id").asLong();
+
+        // 5. Caixa / Gaveta (Filha da Fileira)
+        LocalizacaoRequestDTO gavDto = LocalizacaoRequestDTO.builder()
+                .codigo("GAV-05")
+                .nome("Gaveta 5")
+                .tipo("Gaveta")
+                .descricao("Gaveta para resistores 10k")
+                .localPaiId(filId)
+                .build();
+
+        String gavResStr = mockMvc.perform(post("/api/v1/localizacoes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(gavDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.enderecoCompleto")
+                        .value("Armário de Componentes > Prateleira Superior > Coluna 1 > Fileira A > Gaveta 5"))
+                .andExpect(jsonPath("$.data.enderecoCodigoCompleto")
+                        .value("ARM-METAL-01 > PRAT-01 > COL-01 > FIL-A > GAV-05"))
+                .andReturn().getResponse().getContentAsString();
+
+        Long gavId = objectMapper.readTree(gavResStr).path("data").path("id").asLong();
+
+        // Consulta de detalhe por ID: devolve endereço completo em ordem compreensível
+        mockMvc.perform(get("/api/v1/localizacoes/{id}", gavId)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.id").value(gavId))
+                .andExpect(jsonPath("$.data.codigo").value("GAV-05"))
+                .andExpect(jsonPath("$.data.tipo").value("Gaveta"))
+                .andExpect(jsonPath("$.data.enderecoCompleto")
+                        .value("Armário de Componentes > Prateleira Superior > Coluna 1 > Fileira A > Gaveta 5"))
+                .andExpect(jsonPath("$.data.enderecoCodigoCompleto")
+                        .value("ARM-METAL-01 > PRAT-01 > COL-01 > FIL-A > GAV-05"));
+
+        // Bloqueio de exclusão em nó intermediário (ex: Prateleira possui Coluna/Fileira/Gaveta vinculadas)
+        mockMvc.perform(delete("/api/v1/localizacoes/{id}", pratId))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409));
+    }
 }

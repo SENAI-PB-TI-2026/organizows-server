@@ -1,7 +1,12 @@
 package br.senai.organizows.service;
 
+import br.senai.organizows.dto.localizacao.LocalizacaoRequestDTO;
+import br.senai.organizows.dto.localizacao.LocalizacaoResponseDTO;
 import br.senai.organizows.exception.CodigoLocalizacaoDuplicadoException;
 import br.senai.organizows.exception.HierarquiaInvalidaException;
+import br.senai.organizows.exception.LocalizacaoComFilhosException;
+import br.senai.organizows.exception.LocalizacaoComItensVinculadosException;
+import br.senai.organizows.exception.ResourceNotFoundException;
 import br.senai.organizows.model.Localizacao;
 import br.senai.organizows.repository.LocalizacaoRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -246,5 +251,88 @@ class LocalizacaoServiceTest {
         assertThatThrownBy(() -> service.salvar(loc))
                 .isInstanceOf(org.springframework.dao.DataIntegrityViolationException.class)
                 .hasMessageContaining("FK_OUTRA_RESTRICAO");
+    }
+
+    @Test
+    @DisplayName("Deve lançar ResourceNotFoundException ao tentar criar localização com pai inexistente via DTO")
+    void deveLancarResourceNotFoundAoCriarComPaiInexistente() {
+        LocalizacaoRequestDTO dto = LocalizacaoRequestDTO.builder()
+                .codigo("NOVO-COM-PAI-FALSO")
+                .nome("Local Sem Pai Real")
+                .localPaiId(888888L)
+                .build();
+
+        assertThatThrownBy(() -> localizacaoService.criar(dto))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Localização pai não encontrada com ID: 888888");
+    }
+
+    @Test
+    @DisplayName("Deve lançar ResourceNotFoundException ao tentar salvar entidade com localPai que possui ID inexistente")
+    void deveLancarResourceNotFoundAoSalvarComLocalPaiInexistente() {
+        Localizacao paiFantasma = Localizacao.builder()
+                .id(777777L)
+                .codigo("FANTASMA")
+                .nome("Pai Fantasma")
+                .build();
+
+        Localizacao filha = Localizacao.builder()
+                .codigo("FILHA-FANTASMA")
+                .nome("Filha Fantasma")
+                .localPai(paiFantasma)
+                .build();
+
+        assertThatThrownBy(() -> localizacaoService.salvar(filha))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Localização pai não encontrada com ID: 777777");
+    }
+
+    @Test
+    @DisplayName("Deve bloquear exclusão de localização que possui filhas ou itens vinculados")
+    void deveBloquearExclusaoComFilhasOuItensVinculados() {
+        Localizacao pai = localizacaoService.salvar(Localizacao.builder()
+                .codigo("PAI-EXCLUSAO")
+                .nome("Armário Pai")
+                .build());
+
+        localizacaoService.salvar(Localizacao.builder()
+                .codigo("FILHA-EXCLUSAO")
+                .nome("Gaveta Filha")
+                .localPai(pai)
+                .build());
+
+        assertThatThrownBy(() -> localizacaoService.excluir(pai.getId()))
+                .isInstanceOf(LocalizacaoComFilhosException.class)
+                .hasMessageContaining("não pode ser excluída");
+    }
+
+    @Test
+    @DisplayName("Deve bloquear exclusão quando ocorre violação de integridade por itens vinculados via chave estrangeira")
+    void deveBloquearExclusaoQuandoOcorreDataIntegrityViolation() {
+        LocalizacaoRepository mockRepo = org.mockito.Mockito.mock(LocalizacaoRepository.class);
+        LocalizacaoService service = new LocalizacaoService(mockRepo);
+
+        org.mockito.Mockito.when(mockRepo.existsById(10L)).thenReturn(true);
+        org.mockito.Mockito.when(mockRepo.existsByLocalPaiId(10L)).thenReturn(false);
+        org.mockito.Mockito.doThrow(new org.springframework.dao.DataIntegrityViolationException(
+                "Referential integrity constraint violation: FK_ITEM_LOCALIZACAO"
+        )).when(mockRepo).flush();
+
+        assertThatThrownBy(() -> service.excluir(10L))
+                .isInstanceOf(LocalizacaoComItensVinculadosException.class)
+                .hasMessageContaining("Localização possui itens vinculados e não pode ser excluída");
+    }
+
+    @Test
+    @DisplayName("Deve permitir exclusão de localização sem itens ou filhas vinculadas")
+    void devePermitirExclusaoDeLocalizacaoSemVinculos() {
+        Localizacao isolado = localizacaoService.salvar(Localizacao.builder()
+                .codigo("LOC-ISOLADO")
+                .nome("Local Sem Filhos")
+                .build());
+
+        localizacaoService.excluir(isolado.getId());
+
+        assertThat(localizacaoService.buscarPorId(isolado.getId())).isEmpty();
     }
 }

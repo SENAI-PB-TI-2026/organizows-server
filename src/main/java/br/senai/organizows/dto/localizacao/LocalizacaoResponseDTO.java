@@ -38,6 +38,9 @@ public class LocalizacaoResponseDTO {
     @Schema(description = "Endereço físico completo formatado na hierarquia", example = "Bloco Administrativo > Sala 101")
     private String enderecoCompleto;
 
+    @Schema(description = "Endereço hierárquico formatado pelos códigos únicos", example = "BLOCO-A > SALA-101")
+    private String enderecoCodigoCompleto;
+
     public static LocalizacaoResponseDTO fromEntity(Localizacao localizacao) {
         if (localizacao == null) {
             return null;
@@ -59,6 +62,7 @@ public class LocalizacaoResponseDTO {
                 .localPaiId(paiId)
                 .localPaiNome(paiNome)
                 .enderecoCompleto(localizacao.getEnderecoCompleto())
+                .enderecoCodigoCompleto(localizacao.getEnderecoCodigoCompleto())
                 .build();
     }
 }

@@ -17,20 +17,20 @@ public class LocalizacaoRequestDTO {
 
     @NotBlank(message = "O código é obrigatório")
     @Size(max = 50, message = "O código não pode exceder 50 caracteres")
-    @Schema(description = "Código identificador único da localização", example = "BLOCO-A")
+    @Schema(description = "Código identificador único da localização", example = "ARM-01")
     private String codigo;
 
     @NotBlank(message = "O nome é obrigatório")
     @Size(max = 255, message = "O nome não pode exceder 255 caracteres")
-    @Schema(description = "Nome descritivo da localização", example = "Bloco Administrativo")
+    @Schema(description = "Nome descritivo da localização", example = "Armário 01")
     private String nome;
 
     @Size(max = 100, message = "O tipo não pode exceder 100 caracteres")
-    @Schema(description = "Tipo ou classificação do espaço (ex: Prédio, Galpão, Sala, Prateleira)", example = "Prédio")
+    @Schema(description = "Tipo ou classificação do espaço (ex: Armário, Prateleira, Coluna, Fileira, Recipiente, Gaveta, Caixa)", example = "Armário")
     private String tipo;
 
     @Size(max = 255, message = "A descrição não pode exceder 255 caracteres")
-    @Schema(description = "Descrição detalhada da localização", example = "Prédio principal do campus")
+    @Schema(description = "Descrição detalhada da localização", example = "Armário principal de componentes eletrônicos")
     private String descricao;
 
     @Schema(description = "ID da localização pai (opcional, para compor hierarquia física)", example = "1")

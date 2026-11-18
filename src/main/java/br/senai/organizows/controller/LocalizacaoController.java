@@ -42,6 +42,8 @@ public class LocalizacaoController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Localização criada com sucesso"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Dados de requisição inválidos ou ciclo hierárquico",
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Localização pai não encontrada",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Código de localização duplicado",
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     })
@@ -151,7 +153,7 @@ public class LocalizacaoController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "Localização removida com sucesso"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Localização não encontrada",
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class))),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Localização possui filhas",
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Localização possui filhas ou itens vinculados",
                     content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
     })
     public ResponseEntity<Void> excluir(@PathVariable Long id) {
