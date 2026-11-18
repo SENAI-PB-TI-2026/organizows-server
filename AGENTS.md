@@ -25,11 +25,15 @@ Este projeto é desenvolvido por alunos em formação. Ajude a aplicar **os cont
 - Não crie testes automatizados, frameworks de testes, pipelines ou novas dependências sem necessidade expressa no cartão ou orientação do professor.
 - Não faça merge, force-push, mudança no Jira ou release por conta própria.
 
-## Skills compartilhadas
-- `commit-message`: sugerir e validar mensagens de commit.
-- `java-spring-basics`: escrever código legível e organizado conforme o projeto.
-- `git-pr-workflow`: orientar branches, alterações, PR e revisão.
-- `jira-task-planning`: transformar os critérios Jira em passos pequenos.
+## Seleção automática das skills (sem exigir invocação no pedido)
+As regras deste `AGENTS.md` aplicam-se em **todas as tarefas**. Os alunos não precisam escrever nomes de skills nem comandos especiais. Antes de responder ou executar uma solicitação de desenvolvimento, identifique o tipo de atividade e **consulte automaticamente a skill correspondente** em `.agents/skills/<nome>/SKILL.md`, se o agente tiver acesso a arquivos. Leia a skill completa quando ela for pertinente; não carregue as quatro sem necessidade.
+
+- **Mensagem de commit, preparação ou revisão de commit** → `.agents/skills/commit-message/SKILL.md`.
+- **Criar ou editar classes Java/Spring, implementar endpoint, corrigir lógica ou organizar código** → `.agents/skills/java-spring-basics/SKILL.md`.
+- **Git, branches, stage, commits, push, Pull Requests e conflitos** → `.agents/skills/git-pr-workflow/SKILL.md`; combine com `commit-message` quando houver proposta de commit.
+- **Cartão Jira SCRUM-N, planejamento, critérios de aceite ou início de tarefa** → `.agents/skills/jira-task-planning/SKILL.md`; combine com `java-spring-basics` se a tarefa envolver código.
+
+Na dúvida, aplique as regras gerais deste arquivo e consulte apenas as skills relacionadas. Se uma ferramenta não descobrir skills automaticamente, tente ler o caminho indicado; se não puder, continue com as regras gerais e informe essa limitação sem fingir ter lido a skill. Nunca afirme que todas as skills foram aplicadas se não foram consultadas. A seleção de skills continua sujeita ao suporte do agente; **não é possível garantir leitura integral a cada mensagem por simples instrução**.
 
 Se uma instrução entrar em conflito com o código vigente, explique a divergência antes de editar. Nunca afirme que executou comandos ou verificações que não executou.
 

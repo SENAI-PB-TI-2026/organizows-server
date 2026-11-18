@@ -12,7 +12,7 @@ Estas instruções são versionadas no projeto e podem ser reutilizadas por agen
 ## Como usar
 1. Após o merge deste PR, atualize sua branch com as mudanças de `develop`.
 2. Abra a raiz do projeto no editor e reinicie a sessão do agente, se necessário.
-3. Peça a utilização da skill necessária ou solicite a leitura de seu `SKILL.md`.
+3. Escreva seu pedido normalmente, por exemplo: `Implemente a SCRUM-22` ou `Sugira a mensagem do meu commit`. As instruções permanentes orientam o agente a selecionar a skill apropriada automaticamente. Não é necessário conhecer os nomes das skills.
 
 | Skill | Quando usar |
 | --- | --- |
@@ -22,10 +22,10 @@ Estas instruções são versionadas no projeto e podem ser reutilizadas por agen
 | `jira-task-planning` | Transformar tarefas do Jira em pequenos passos |
 
 Exemplo de pedido:
-> Vou trabalhar na SCRUM-22. Use jira-task-planning e java-spring-basics para me orientar, respeitando AGENTS.md. No fim, sugira como validar manualmente e uma mensagem de commit com commit-message.
+> Vou trabalhar na SCRUM-22. Analise os critérios da tarefa, implemente apenas o que já foi ensinado e sugira como conferir manualmente e qual mensagem de commit utilizar.
 
 ## Compatibilidade
-As skills usam `.agents/skills/<nome>/SKILL.md` para agentes que reconheçam esse formato. Há instruções adicionais para GitHub Copilot em `.github/copilot-instructions.md`. Caso um agente não carregue skills automaticamente, peça para ler o arquivo diretamente.
+As skills usam `.agents/skills/<nome>/SKILL.md` para agentes que reconheçam esse formato. Há instruções adicionais para GitHub Copilot em `.github/copilot-instructions.md`. Os agentes geralmente leem as instruções permanentes automaticamente e selecionam skills conforme a solicitação, mas **não há garantia de leitura integral de todas as skills em cada mensagem**. Caso não reconheçam uma skill, peça para ler o arquivo diretamente. Abra a **raiz do repositório** como workspace e reinicie a sessão do agente após atualizar os arquivos, se necessário.
 
 ## Limites
 Agentes podem errar; confira o diff antes de commitar. Não permita que o agente envie credenciais, altere `develop` ou faça merge sem autorização. O professor deve revisar a abordagem, principalmente se ela envolver conteúdo não ensinado.

@@ -1,6 +1,6 @@
 # GitHub Copilot — Organizows Server
 
-Leia `AGENTS.md` e `CONTRIBUTING.md`. Utilize as skills em `.agents/skills/` conforme a tarefa.
+Leia `AGENTS.md` e `CONTRIBUTING.md`. **Não exija que o aluno mencione uma skill.** Escolha automaticamente pelo assunto e leia a skill em `.agents/skills/<nome>/SKILL.md` quando relevante. Para commits use `commit-message`; para código Java/Spring use `java-spring-basics`; para Git/PR use `git-pr-workflow`; para tarefas Jira use `jira-task-planning`. Carregue somente as skills pertinentes, sem afirmar leitura que não aconteceu.
 
 Este é um projeto educacional: priorize código simples, nomes expressivos, explicações breves e commits rastreáveis `[SCRUM-N]`. Não exija testes automatizados, pipelines, ferramentas ou padrões ainda não ensinados. Sugira-os como evolução, sem implementar automaticamente. Validações manuais e revisão dos colegas são suficientes nesta etapa quando os critérios permitem.
 
