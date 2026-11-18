@@ -4,6 +4,8 @@ import br.senai.organizows.dto.localizacao.LocalizacaoRequestDTO;
 import br.senai.organizows.dto.localizacao.LocalizacaoResponseDTO;
 import br.senai.organizows.exception.CodigoLocalizacaoDuplicadoException;
 import br.senai.organizows.exception.HierarquiaInvalidaException;
+import br.senai.organizows.exception.LocalizacaoComFilhosException;
+import br.senai.organizows.exception.LocalizacaoComItensVinculadosException;
 import br.senai.organizows.exception.ResourceNotFoundException;
 import br.senai.organizows.model.Localizacao;
 import br.senai.organizows.repository.LocalizacaoRepository;
@@ -37,6 +39,9 @@ public class LocalizacaoService {
                 throw new CodigoLocalizacaoDuplicadoException(
                         "Já existe uma localização cadastrada com o código: " + localizacao.getCodigo()
                 );
+            }
+            if (isViolacaoRestricaoLocalPai(ex)) {
+                throw new ResourceNotFoundException("Localização pai não encontrada.");
             }
             throw ex;
         }
@@ -113,9 +118,14 @@ public class LocalizacaoService {
             throw new ResourceNotFoundException("Localização não encontrada com ID: " + id);
         }
         if (localizacaoRepository.existsByLocalPaiId(id)) {
-            throw new br.senai.organizows.exception.LocalizacaoComFilhosException("Localização possui filhas e não pode ser excluída");
+            throw new LocalizacaoComItensVinculadosException("Localização possui filhas e não pode ser excluída");
         }
-        localizacaoRepository.deleteById(id);
+        try {
+            localizacaoRepository.deleteById(id);
+            localizacaoRepository.flush();
+        } catch (DataIntegrityViolationException ex) {
+            throw new LocalizacaoComItensVinculadosException("Localização possui itens vinculados e não pode ser excluída");
+        }
     }
 
     @Transactional(readOnly = true)
@@ -193,6 +203,11 @@ public class LocalizacaoService {
             return;
         }
 
+        // 0. Existência do pai no banco quando ID informado
+        if (localizacao.getLocalPai().getId() != null && !localizacaoRepository.existsById(localizacao.getLocalPai().getId())) {
+            throw new ResourceNotFoundException("Localização pai não encontrada com ID: " + localizacao.getLocalPai().getId());
+        }
+
         // 1. Autorreferência direta em memória
         if (localizacao == localizacao.getLocalPai()) {
             throw new HierarquiaInvalidaException("Uma localização não pode ter a si mesma como pai.");
@@ -238,6 +253,23 @@ public class LocalizacaoService {
             }
             String message = cause.getMessage();
             if (message != null && message.toLowerCase().contains("uk_localizacao_codigo")) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
+    }
+
+    private boolean isViolacaoRestricaoLocalPai(DataIntegrityViolationException ex) {
+        Throwable cause = ex;
+        while (cause != null) {
+            if (cause instanceof ConstraintViolationException cve) {
+                if ("fk_localizacao_local_pai".equalsIgnoreCase(cve.getConstraintName())) {
+                    return true;
+                }
+            }
+            String message = cause.getMessage();
+            if (message != null && message.toLowerCase().contains("fk_localizacao_local_pai")) {
                 return true;
             }
             cause = cause.getCause();

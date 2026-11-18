@@ -111,9 +111,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    @ExceptionHandler(LocalizacaoComFilhosException.class)
-    public ResponseEntity<ApiErrorResponse> handleLocalizacaoComFilhos(
-            LocalizacaoComFilhosException ex, HttpServletRequest request) {
+    @ExceptionHandler({LocalizacaoComFilhosException.class, LocalizacaoComItensVinculadosException.class})
+    public ResponseEntity<ApiErrorResponse> handleLocalizacaoComFilhosOuItens(
+            RuntimeException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiErrorResponse.builder()
                 .status(409).error(HttpStatus.CONFLICT.getReasonPhrase())
                 .message(ex.getMessage()).path(request.getRequestURI()).build());
