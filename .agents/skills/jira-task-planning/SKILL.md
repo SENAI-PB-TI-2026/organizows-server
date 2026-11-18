@@ -13,3 +13,6 @@ description: Traduzir tarefas Jira SCRUM e seus critérios de aceite em pequenos
 6. Para cada critério, proponha um exemplo manual de verificação: ação, resultado esperado, resposta recebida (somente se testada).
 7. No final, apresente `critério | arquivo(s) | modo de verificar | situação`. Não marque concluído apenas por existir código.
 8. Não altere o status no Jira sem autorização. Não presuma que testes automatizados são obrigatórios.
+
+## Critérios relacionados a login e permissões
+Se o cartão tratar de login, senha, autenticação ou autorização, informe que o conteúdo ainda não foi ensinado e sinalize a dependência de orientação do professor. Não mude o status do cartão nem gere implementação de autenticação improvisada. Para outras tarefas, não acrescente autenticação como escopo extra.

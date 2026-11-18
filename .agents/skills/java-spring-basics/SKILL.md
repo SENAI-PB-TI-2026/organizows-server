@@ -26,3 +26,8 @@ Descreva um roteiro manual simples, por exemplo: iniciar a aplicação, cadastra
 
 ## Saída
 Resumo do que foi alterado, explicação acessível das decisões, arquivos modificados, como testar manualmente e itens pendentes.
+
+## Segurança e conteúdo ainda não ministrado
+- Para as tarefas atuais, **não gere** classes de login, autenticação, autorização, JWT, Spring Security, perfis de usuário ou controle de acesso. Isso não faz parte das práticas já ensinadas.
+- Quando encontrar um requisito futuro de perfil/aluno/professor, indique o cartão e o bloqueio pedagógico, sem inventar uma solução ou remover o requisito.
+- Não exponha o protótipo como serviço de produção nem descreva rotas de escrita sem autenticação como seguras. Continue aplicando validações de campos e boas práticas básicas.

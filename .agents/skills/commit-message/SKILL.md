@@ -34,3 +34,5 @@ Tipos: `feat` (funcionalidade), `fix` (correção), `docs` (documentação), `re
 - Sem segredos ou arquivos de IDE no commit?
 
 Siga a convenção oficial em `CONTRIBUTING.md` se houver diferença de estilo.
+
+Não use mensagens de commit para justificar adição de autenticação/autorização fora do escopo ensinado. Antes de sugerir um commit, indique se o diff introduz login, JWT, permissões ou usuários sem orientação docente.

@@ -32,3 +32,10 @@ Este projeto é desenvolvido por alunos em formação. Ajude a aplicar **os cont
 - `jira-task-planning`: transformar os critérios Jira em passos pequenos.
 
 Se uma instrução entrar em conflito com o código vigente, explique a divergência antes de editar. Nunca afirme que executou comandos ou verificações que não executou.
+
+## Limites do conteúdo ministrado: autenticação e autorização
+- **Autenticação e autorização ainda não foram ensinadas às equipes.** Não introduza nem configure Spring Security, JWT, OAuth2, tokens, login, senhas, roles, permissões, `@PreAuthorize` ou sistemas de usuários por iniciativa própria.
+- Cartões existentes sobre autenticação/autorização (ex.: SCRUM-14, SCRUM-24, SCRUM-25 e tarefas relacionadas) são **escopo futuro dependente de orientação do professor**. Não marque como concluídos, não implemente atalhos e não altere o Jira automaticamente.
+- Se o aluno pedir uma dessas funcionalidades, explique que ela exige conteúdo ainda não ministrado, identifique a dependência e solicite orientação do professor antes de implementar. A instrução explícita do professor prevalece quando esse conteúdo for introduzido.
+- **Não confunda ausência de autenticação no protótipo com segurança de produção.** Não afirme que endpoints de escrita públicos são adequados para implantação real; não publique serviços acessíveis externamente sem autorização e avaliação de segurança.
+- Continue validando entradas, usando tratamento de exceções existente e evitando credenciais no código; essas práticas não dependem de login.

@@ -31,3 +31,9 @@ As skills usam `.agents/skills/<nome>/SKILL.md` para agentes que reconheçam ess
 Agentes podem errar; confira o diff antes de commitar. Não permita que o agente envie credenciais, altere `develop` ou faça merge sem autorização. O professor deve revisar a abordagem, principalmente se ela envolver conteúdo não ensinado.
 
 Estas orientações evoluem com o curso: automação, testes e CI poderão ser introduzidos **depois**, em PR próprio.
+
+## Conteúdo ainda não ministrado: login e permissões
+Nenhuma equipe trabalhou ainda com **autenticação ou autorização**. Portanto, os agentes não devem incluir espontaneamente login, JWT, Spring Security, usuários/senhas ou perfis. Tickets dessa área continuam válidos no Jira, mas devem aguardar orientação do professor antes da implementação. Essa restrição é **pedagógica e temporária**, não uma recomendação de operar sistemas reais sem segurança. Não publicar APIs de escrita abertas na internet.
+
+### Boas práticas aproveitadas de outra equipe
+Foram identificadas instruções de agentes do repositório `minha-sala-server` (branch `feat/SCRUM-216`): divisão de responsabilidades por camada, convenção de verbos em commits, roteiro CRUD, explicitação de dúvidas importantes e autorização humana para operações Git. Aplicar essas ideias adaptadas ao OrganizoWS, sem copiar proibições de domínio de outro projeto ou introduzir exigências de testes automatizados nesta etapa.

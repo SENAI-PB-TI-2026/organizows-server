@@ -20,3 +20,6 @@ description: Orientar estudantes do Organizows a criar branches a partir de deve
 - Implementação: endpoint GET e DTO de resposta.
 - Verificação manual: consultar código existente (200) e inexistente (404) no Swagger.
 - Pendências: registrar o que não foi implementado, sem declarar "tudo funcionando" sem execução.
+
+## Checagem de escopo pedagógico antes de abrir PR
+Verifique se o diff introduziu autenticação/autorização não solicitada ou requisitos ainda não ministrados. Se sim, pare e explique a necessidade de alinhamento com o professor antes de incluir tais mudanças. Não declare segurança para uso público sem verificação adequada.

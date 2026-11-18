@@ -61,3 +61,6 @@ Para enviar uma atividade:
 - O autor explicou erros, limitações ou pontos incompletos?
 
 Não confunda o funcionamento manual com a garantia de prontidão para produção: testes e verificações adicionais serão introduzidos ao longo do curso.
+
+## 7. Escopo pedagógico de autenticação/autorização
+Ainda não foram ministrados login, autenticação, autorização e papéis de usuário. Não adicione Spring Security, JWT, tokens, senha ou controle de permissões como parte de atividades comuns. Caso um cartão do Jira trate especificamente desses conteúdos, consulte o professor antes de começar; os cartões não devem ser considerados automaticamente concluídos ou excluídos. O protótipo sem controles de acesso **não deve ser exposto como aplicação de produção**.
