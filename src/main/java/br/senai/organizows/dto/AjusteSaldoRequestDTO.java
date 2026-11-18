@@ -14,4 +14,6 @@ public class AjusteSaldoRequestDTO {
 
     @NotNull(message = "A quantidade de ajuste (delta) é obrigatória")
     private Integer delta;
+    @NotNull(message = "O ajuste de saldo é obrigatório")
+    private Integer deltaQuantidade;
 }

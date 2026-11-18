@@ -1,0 +1,11 @@
+# GitHub Copilot — Organizows Server
+
+Leia `AGENTS.md` e `CONTRIBUTING.md`. **Não exija que o aluno mencione uma skill.** Escolha automaticamente pelo assunto e leia a skill em `.agents/skills/<nome>/SKILL.md` quando relevante. Para commits use `commit-message`; para código Java/Spring use `java-spring-basics`; para Git/PR use `git-pr-workflow`; para tarefas Jira use `jira-task-planning`. Carregue somente as skills pertinentes, sem afirmar leitura que não aconteceu.
+
+Este é um projeto educacional: priorize código simples, nomes expressivos, explicações breves e commits rastreáveis `[SCRUM-N]`. Não exija testes automatizados, pipelines, ferramentas ou padrões ainda não ensinados. Sugira-os como evolução, sem implementar automaticamente. Validações manuais e revisão dos colegas são suficientes nesta etapa quando os critérios permitem.
+
+Não altere `develop`, `main`, PRs, Jira ou configurações de build sem autorização.
+
+Autenticação e autorização ainda **não foram ministradas**. Não implemente Spring Security, JWT, login, usuário/senha, roles ou regras de permissão espontaneamente. Se um ticket pedir isso, documente como dependência pedagógica e aguarde orientação expressa do professor. Nunca trate uma API com escrita pública como pronta para produção.
+
+Quando o aluno colar uma descrição de cartão Jira, **não exija integração Jira**: identifique `SCRUM-N` e o bloco `Instruções para o agente`, siga `AGENTS.md` e `git-pr-workflow` para partir da `develop` limpa e criar a branch local `feature/SCRUM-N-slug` antes de implementar. Somente commit, push e PR exigem confirmação do aluno.

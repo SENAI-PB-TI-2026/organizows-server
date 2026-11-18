@@ -2,9 +2,6 @@ package br.senai.organizows.service;
 
 import br.senai.organizows.dto.MaterialRequestDTO;
 import br.senai.organizows.dto.MaterialResponseDTO;
-import br.senai.organizows.enums.CategoriaMaterial;
-import br.senai.organizows.enums.StatusMaterial;
-import br.senai.organizows.exception.CodigoMaterialDuplicadoException;
 import br.senai.organizows.exception.ResourceNotFoundException;
 import br.senai.organizows.model.Localizacao;
 import br.senai.organizows.model.Material;
@@ -14,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -30,175 +26,93 @@ public class MaterialService {
 
     @Transactional
     public MaterialResponseDTO criar(MaterialRequestDTO dto) {
-        if (materialRepository.existsByCodigo(dto.getCodigo())) {
-            throw new CodigoMaterialDuplicadoException("Já existe um material cadastrado com o código: " + dto.getCodigo());
-        }
-
-        validarQuantidades(dto.getQuantidadeDisponivel(), dto.getQuantidadeMinima());
-
         Material material = new Material();
-        preencherDados(material, dto);
-
-        Material salvo = materialRepository.save(material);
-        return new MaterialResponseDTO(salvo);
-    }
-
-    public List<MaterialResponseDTO> listar(String nome, CategoriaMaterial categoria, StatusMaterial status, String codigo, Long localId) {
-        if (codigo != null && !codigo.isBlank()) {
-            return materialRepository.findByCodigo(codigo)
-                    .map(m -> List.of(new MaterialResponseDTO(m)))
-                    .orElse(List.of());
-        }
-        if (localId != null) {
-            return materialRepository.findByLocalizacaoId(localId)
-                    .stream()
-                    .map(MaterialResponseDTO::new)
-                    .collect(Collectors.toList());
-        }
-        if (categoria != null) {
-            return materialRepository.findByCategoria(categoria)
-                    .stream()
-                    .map(MaterialResponseDTO::new)
-                    .collect(Collectors.toList());
-        }
-        if (status != null) {
-            return materialRepository.findByStatus(status)
-                    .stream()
-                    .map(MaterialResponseDTO::new)
-                    .collect(Collectors.toList());
-        }
-        if (nome != null && !nome.isBlank()) {
-            return materialRepository.findByNomeContainingIgnoreCase(nome)
-                    .stream()
-                    .map(MaterialResponseDTO::new)
-                    .collect(Collectors.toList());
-        }
-        return listarTodos();
+        preencherCadastro(material, dto);
+        material.setQuantidadeDisponivel(dto.getQuantidadeDisponivel());
+        return new MaterialResponseDTO(materialRepository.save(material));
     }
 
     public List<MaterialResponseDTO> listarTodos() {
-        return materialRepository.findAll()
-                .stream()
-                .map(MaterialResponseDTO::new)
-                .collect(Collectors.toList());
+        return materialRepository.findAll().stream().map(MaterialResponseDTO::new).toList();
+    }
+
+    public List<MaterialResponseDTO> listarPorGrupo(String grupo) {
+        return materialRepository.findByGrupoIgnoreCase(grupo).stream()
+                .map(MaterialResponseDTO::new).toList();
     }
 
     public MaterialResponseDTO buscarPorId(Long id) {
-        Material material = buscarEntidadePorId(id);
-        return new MaterialResponseDTO(material);
-    }
-
-    public MaterialResponseDTO buscarPorCodigo(String codigo) {
-        Material material = materialRepository.findByCodigo(codigo)
-                .orElseThrow(() -> new ResourceNotFoundException("Material não encontrado com código: " + codigo));
-        return new MaterialResponseDTO(material);
+        return new MaterialResponseDTO(buscarEntidadePorId(id));
     }
 
     @Transactional
     public MaterialResponseDTO atualizar(Long id, MaterialRequestDTO dto) {
-        Material material = buscarEntidadePorId(id);
-
-        if (!material.getCodigo().equals(dto.getCodigo()) && materialRepository.existsByCodigo(dto.getCodigo())) {
-            throw new CodigoMaterialDuplicadoException("Já existe outro material cadastrado com o código: " + dto.getCodigo());
+        Material material = materialRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Material não encontrado com ID: " + id));
+        // Atualizações cadastrais não podem substituir o saldo e contornar uma movimentação concorrente.
+        if (!material.getQuantidadeDisponivel().equals(dto.getQuantidadeDisponivel())) {
+            throw new IllegalArgumentException("Para alterar a quantidade disponível, utilize o ajuste de saldo.");
         }
-
-        if (dto.getQuantidadeMinima() != null && dto.getQuantidadeMinima() < 0) {
-            throw new IllegalArgumentException("A quantidade mínima não pode ser negativa.");
-        }
-
-        material.setCodigo(dto.getCodigo());
-        material.setNome(dto.getNome());
-        material.setDescricao(dto.getDescricao());
-        material.setCategoria(dto.getCategoria());
-        material.setSubgrupo(dto.getSubgrupo());
-        material.setModelo(dto.getModelo());
-        material.setEspecificacoesTecnicas(dto.getEspecificacoesTecnicas());
-        material.setStatus(dto.getStatus());
-        material.setQuantidadeMinima(dto.getQuantidadeMinima());
-        // Regra de integridade do estoque: a quantidade disponível é preservada durante o PUT de cadastro,
-        // garantindo que alterações cadastrais não burlem o fluxo e auditoria de movimentações/saldo.
-
-        if (dto.getLocalId() != null) {
-            Localizacao localizacao = localizacaoRepository.findById(dto.getLocalId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Localização não encontrada com ID: " + dto.getLocalId()));
-            material.setLocalizacao(localizacao);
-        } else {
-            material.setLocalizacao(null);
-        }
-
-        Material atualizado = materialRepository.save(material);
-        return new MaterialResponseDTO(atualizado);
+        preencherCadastro(material, dto);
+        return new MaterialResponseDTO(materialRepository.save(material));
     }
 
     @Transactional
     public void deletar(Long id) {
-        Material material = buscarEntidadePorId(id);
+        Material material = materialRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Material não encontrado com ID: " + id));
         materialRepository.delete(material);
     }
 
     public List<MaterialResponseDTO> listarAlertaReposicao() {
-        return materialRepository.findMateriaisParaReposicao()
-                .stream()
-                .map(MaterialResponseDTO::new)
-                .collect(Collectors.toList());
+        return materialRepository.findMateriaisParaReposicao().stream()
+                .map(MaterialResponseDTO::new).toList();
     }
 
     @Transactional
     public MaterialResponseDTO ajustarSaldo(Long materialId, Integer deltaQuantidade) {
         if (deltaQuantidade == null || deltaQuantidade == 0) {
-            throw new IllegalArgumentException("A quantidade de ajuste não pode ser nula ou zero.");
+            throw new IllegalArgumentException("A quantidade do ajuste deve ser diferente de zero.");
         }
-
         Material material = materialRepository.findByIdForUpdate(materialId)
                 .orElseThrow(() -> new ResourceNotFoundException("Material não encontrado com ID: " + materialId));
 
         int novoSaldo;
         try {
             novoSaldo = Math.addExact(material.getQuantidadeDisponivel(), deltaQuantidade);
-        } catch (ArithmeticException e) {
-            throw new IllegalArgumentException("Operação resulta em estouro numérico (overflow) de saldo.");
+        } catch (ArithmeticException ex) {
+            throw new IllegalArgumentException("O ajuste de saldo excede o limite permitido.", ex);
         }
 
         if (novoSaldo < 0) {
-            throw new IllegalArgumentException(
-                    "Operação negada: o saldo disponível (" + material.getQuantidadeDisponivel() +
-                            ") não pode ficar negativo ao ajustar " + deltaQuantidade + " unidades."
-            );
+            throw new IllegalArgumentException("O saldo do material não pode ficar negativo.");
         }
-
         material.setQuantidadeDisponivel(novoSaldo);
-        Material atualizado = materialRepository.save(material);
-        return new MaterialResponseDTO(atualizado);
+        return new MaterialResponseDTO(materialRepository.save(material));
     }
 
-    private void preencherDados(Material material, MaterialRequestDTO dto) {
-        material.setCodigo(dto.getCodigo());
-        material.setNome(dto.getNome());
-        material.setDescricao(dto.getDescricao());
-        material.setCategoria(dto.getCategoria());
+    private void preencherCadastro(Material material, MaterialRequestDTO dto) {
+        material.setCodigo(dto.getCodigo().trim());
+        material.setNome(dto.getNome().trim());
+        material.setDescricao(dto.getDescricao().trim());
+        material.setCaracteristicas(dto.getCaracteristicas());
+        material.setGrupo(dto.getGrupo().trim());
         material.setSubgrupo(dto.getSubgrupo());
-        material.setModelo(dto.getModelo());
-        material.setEspecificacoesTecnicas(dto.getEspecificacoesTecnicas());
+        material.setCategoria(dto.getCategoria());
         material.setStatus(dto.getStatus());
-        material.setQuantidadeDisponivel(dto.getQuantidadeDisponivel() != null ? dto.getQuantidadeDisponivel() : 0);
-        material.setQuantidadeMinima(dto.getQuantidadeMinima() != null ? dto.getQuantidadeMinima() : 0);
+        material.setQuantidadeMinima(dto.getQuantidadeMinima());
 
-        if (dto.getLocalId() != null) {
-            Localizacao localizacao = localizacaoRepository.findById(dto.getLocalId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Localização não encontrada com ID: " + dto.getLocalId()));
-            material.setLocalizacao(localizacao);
-        } else {
-            material.setLocalizacao(null);
-        }
-    }
+        Localizacao localizacao = localizacaoRepository.findById(dto.getLocalId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Localização não encontrada com ID: " + dto.getLocalId()));
+        material.setLocalizacao(localizacao);
 
-    private void validarQuantidades(Integer quantidadeDisponivel, Integer quantidadeMinima) {
-        if (quantidadeDisponivel != null && quantidadeDisponivel < 0) {
-            throw new IllegalArgumentException("A quantidade disponível não pode ser negativa.");
-        }
-        if (quantidadeMinima != null && quantidadeMinima < 0) {
-            throw new IllegalArgumentException("A quantidade mínima não pode ser negativa.");
-        }
+        materialRepository.findByCodigo(material.getCodigo())
+                .filter(existente -> !existente.getId().equals(material.getId()))
+                .ifPresent(existente -> {
+                    throw new org.springframework.dao.DataIntegrityViolationException(
+                            "Código de material já cadastrado: " + material.getCodigo());
+                });
     }
 
     private Material buscarEntidadePorId(Long id) {

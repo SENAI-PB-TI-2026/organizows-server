@@ -25,13 +25,9 @@ public interface MaterialRepository extends JpaRepository<Material, Long> {
 
     Optional<Material> findByCodigo(String codigo);
 
-    boolean existsByCodigo(String codigo);
+    List<Material> findByGrupoIgnoreCase(String grupo);
 
     List<Material> findByCategoria(CategoriaMaterial categoria);
 
     List<Material> findByStatus(StatusMaterial status);
-
-    List<Material> findByNomeContainingIgnoreCase(String nome);
-
-    List<Material> findByLocalizacaoId(Long localizacaoId);
 }

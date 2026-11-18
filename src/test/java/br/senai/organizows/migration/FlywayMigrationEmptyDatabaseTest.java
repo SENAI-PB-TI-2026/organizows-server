@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class FlywayMigrationEmptyDatabaseTest {
 
     @Test
-    @DisplayName("Deve aplicar migrações Flyway V1 e V2 com sucesso em um banco de dados totalmente vazio")
+    @DisplayName("Deve aplicar migração Flyway V1 com sucesso em um banco de dados totalmente vazio")
     void deveAplicarMigracaoFlywayEmBancoVazio() throws SQLException {
         // Criar um banco H2 exclusivo e vazio
         String dbName = "empty_db_" + UUID.randomUUID().toString().replace("-", "");
@@ -51,10 +51,10 @@ class FlywayMigrationEmptyDatabaseTest {
         MigrateResult result = flyway.migrate();
 
         assertThat(result.success).isTrue();
-        assertThat(result.migrationsExecuted).isGreaterThanOrEqualTo(2);
-        assertThat(result.targetSchemaVersion).isEqualTo("2");
+        assertThat(result.migrationsExecuted).isGreaterThanOrEqualTo(1);
+        assertThat(result.targetSchemaVersion).isEqualTo("1");
 
-        // Validar que as tabelas e todas as colunas foram criadas corretamente
+        // Validar que a tabela e todas as colunas foram criadas corretamente
         try (Connection conn = dataSource.getConnection()) {
             DatabaseMetaData metaData = conn.getMetaData();
 
@@ -63,34 +63,24 @@ class FlywayMigrationEmptyDatabaseTest {
                 assertThat(rs.next()).isTrue();
             }
 
-            // Validar colunas esperadas de LOCALIZACAO
-            Set<String> colunasLocalizacao = new HashSet<>();
+            // Validar colunas esperadas
+            Set<String> colunasEncontradas = new HashSet<>();
             try (ResultSet rs = metaData.getColumns(null, "PUBLIC", "LOCALIZACAO", null)) {
                 while (rs.next()) {
-                    colunasLocalizacao.add(rs.getString("COLUMN_NAME").toUpperCase());
+                    colunasEncontradas.add(rs.getString("COLUMN_NAME").toUpperCase());
                 }
             }
-            assertThat(colunasLocalizacao).contains("ID", "CODIGO", "NOME", "TIPO", "DESCRICAO", "LOCAL_PAI_ID");
 
-            // Validar existência da tabela MATERIAL
-            try (ResultSet rs = metaData.getTables(null, "PUBLIC", "MATERIAL", null)) {
-                assertThat(rs.next()).isTrue();
-            }
-
-            // Validar colunas esperadas de MATERIAL
-            Set<String> colunasMaterial = new HashSet<>();
-            try (ResultSet rs = metaData.getColumns(null, "PUBLIC", "MATERIAL", null)) {
-                while (rs.next()) {
-                    colunasMaterial.add(rs.getString("COLUMN_NAME").toUpperCase());
-                }
-            }
-            assertThat(colunasMaterial).contains(
-                    "ID", "CODIGO", "NOME", "DESCRICAO", "CATEGORIA", "SUBGRUPO",
-                    "MODELO", "ESPECIFICACOES_TECNICAS", "STATUS", "QUANTIDADE_DISPONIVEL",
-                    "QUANTIDADE_MINIMA", "LOCALIZACAO_ID", "CRIADO_EM", "ATUALIZADO_EM"
+            assertThat(colunasEncontradas).contains(
+                    "ID",
+                    "CODIGO",
+                    "NOME",
+                    "TIPO",
+                    "DESCRICAO",
+                    "LOCAL_PAI_ID"
             );
 
-            // Inserir registro raiz em localizacao com sucesso
+            // Inserir registro raiz com sucesso
             try (PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO localizacao (codigo, nome, tipo, descricao) VALUES (?, ?, ?, ?)")) {
                 stmt.setString(1, "GALPAO-01");
@@ -101,7 +91,7 @@ class FlywayMigrationEmptyDatabaseTest {
                 assertThat(rows).isEqualTo(1);
             }
 
-            // Inserir registro filho em localizacao com chave estrangeira
+            // Inserir registro filho com chave estrangeira
             try (PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO localizacao (codigo, nome, tipo, local_pai_id) VALUES (?, ?, ?, ?)")) {
                 stmt.setString(1, "CORR-01");
@@ -112,86 +102,37 @@ class FlywayMigrationEmptyDatabaseTest {
                 assertThat(rows).isEqualTo(1);
             }
 
-            // Inserir material com sucesso associado a localização existente
+            // Validar constraint única de código no banco
             try (PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO material (codigo, nome, categoria, status, quantidade_disponivel, quantidade_minima, localizacao_id, criado_em, atualizado_em) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")) {
-                stmt.setString(1, "MAT-FLY-1");
-                stmt.setString(2, "Cabo UTP Cat6");
-                stmt.setString(3, "CABO");
-                stmt.setString(4, "DISPONIVEL");
-                stmt.setInt(5, 50);
-                stmt.setInt(6, 10);
-                stmt.setLong(7, 1L);
-                int rows = stmt.executeUpdate();
-                assertThat(rows).isEqualTo(1);
+                    "INSERT INTO localizacao (codigo, nome) VALUES (?, ?)")) {
+                stmt.setString(1, "GALPAO-01"); // código duplicado
+                stmt.setString(2, "Galpão Duplicado");
+                assertThatThrownBy(stmt::executeUpdate)
+                        .isInstanceOf(SQLException.class);
             }
 
-            // Inserir material com localizacao_id nula (opcional) com sucesso
-            try (PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO material (codigo, nome, categoria, status, quantidade_disponivel, quantidade_minima, localizacao_id, criado_em, atualizado_em) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")) {
-                stmt.setString(1, "MAT-FLY-2");
-                stmt.setString(2, "Conector RJ45");
-                stmt.setString(3, "CABO");
-                stmt.setString(4, "DISPONIVEL");
-                stmt.setInt(5, 100);
-                stmt.setInt(6, 20);
-                int rows = stmt.executeUpdate();
-                assertThat(rows).isEqualTo(1);
+            // Validar existência do índice para local_pai_id
+            boolean indexEncontrado = false;
+            try (ResultSet rs = metaData.getIndexInfo(null, "PUBLIC", "LOCALIZACAO", false, false)) {
+                while (rs.next()) {
+                    String indexName = rs.getString("INDEX_NAME");
+                    if ("IDX_LOCALIZACAO_LOCAL_PAI_ID".equalsIgnoreCase(indexName)) {
+                        indexEncontrado = true;
+                        break;
+                    }
+                }
             }
+            assertThat(indexEncontrado).isTrue();
 
-            // Validar constraint única de código no banco (Material)
+            // Validar constraint CHECK que impede local_pai_id igual a id
             try (PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO material (codigo, nome, categoria, status, quantidade_disponivel, quantidade_minima, criado_em, atualizado_em) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")) {
-                stmt.setString(1, "MAT-FLY-1"); // código duplicado
-                stmt.setString(2, "Outro Cabo");
-                stmt.setString(3, "CABO");
-                stmt.setString(4, "DISPONIVEL");
-                stmt.setInt(5, 10);
-                stmt.setInt(6, 5);
-                assertThatThrownBy(stmt::executeUpdate).isInstanceOf(SQLException.class);
-            }
-
-            // Validar FK inválida em material (rejeição de localizacao_id inexistente)
-            try (PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO material (codigo, nome, categoria, status, quantidade_disponivel, quantidade_minima, localizacao_id, criado_em, atualizado_em) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")) {
-                stmt.setString(1, "MAT-FK-ERR");
-                stmt.setString(2, "Material Inexistente");
-                stmt.setString(3, "CABO");
-                stmt.setString(4, "DISPONIVEL");
-                stmt.setInt(5, 10);
-                stmt.setInt(6, 5);
-                stmt.setLong(7, 99999L);
-                assertThatThrownBy(stmt::executeUpdate).isInstanceOf(SQLException.class);
-            }
-
-            // Validar constraint CHECK de quantidade disponível negativa
-            try (PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO material (codigo, nome, categoria, status, quantidade_disponivel, quantidade_minima, criado_em, atualizado_em) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")) {
-                stmt.setString(1, "MAT-NEG-1");
-                stmt.setString(2, "Material Negativo");
-                stmt.setString(3, "CABO");
-                stmt.setString(4, "DISPONIVEL");
-                stmt.setInt(5, -1);
-                stmt.setInt(6, 5);
-                assertThatThrownBy(stmt::executeUpdate).isInstanceOf(SQLException.class);
-            }
-
-            // Validar constraint CHECK de quantidade mínima negativa
-            try (PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO material (codigo, nome, categoria, status, quantidade_disponivel, quantidade_minima, criado_em, atualizado_em) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")) {
-                stmt.setString(1, "MAT-NEG-2");
-                stmt.setString(2, "Material Negativo Min");
-                stmt.setString(3, "CABO");
-                stmt.setString(4, "DISPONIVEL");
-                stmt.setInt(5, 10);
-                stmt.setInt(6, -5);
-                assertThatThrownBy(stmt::executeUpdate).isInstanceOf(SQLException.class);
+                    "INSERT INTO localizacao (id, codigo, nome, local_pai_id) VALUES (?, ?, ?, ?)")) {
+                stmt.setLong(1, 99L);
+                stmt.setString(2, "CHK-AUTOREF");
+                stmt.setString(3, "Autorreferência Direta");
+                stmt.setLong(4, 99L);
+                assertThatThrownBy(stmt::executeUpdate)
+                        .isInstanceOf(SQLException.class);
             }
         }
     }

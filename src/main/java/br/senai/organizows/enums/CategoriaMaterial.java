@@ -5,6 +5,7 @@ public enum CategoriaMaterial {
     HARDWARE,
     CABO,
     COMPONENTE_ELETRONICO,
+    EQUIPAMENTO,
     FERRAMENTA,
     CONSUMIVEL
 }
