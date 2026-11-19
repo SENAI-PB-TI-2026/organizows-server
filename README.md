@@ -133,11 +133,42 @@ Tratamento centralizado pelo `GlobalExceptionHandler`:
 
 ---
 
-## Perfis de Ambiente e Segurança de Credenciais
+## Banco de desenvolvimento e perfis
+
+O perfil `dev` usa um banco H2 em memória chamado `organizows_dev`. Na inicialização, o Flyway aplica as migrações em `src/main/resources/db/migration` e o Hibernate valida o esquema criado. Adicione mudanças no esquema em uma nova migração versionada.
+
+| Variável | Finalidade | Padrão do perfil `dev` |
+| --- | --- | --- |
+| `SPRING_PROFILES_ACTIVE` | Seleciona o perfil Spring. Use `dev` para o banco de desenvolvimento. | `h2` se nenhum perfil for selecionado |
+| `DEV_DB_URL` | URL JDBC do banco de desenvolvimento. | `jdbc:h2:mem:organizows_dev;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE` |
+| `DEV_DB_DRIVER` | Classe do driver JDBC. | `org.h2.Driver` |
+| `DEV_DB_USER` | Usuário do banco. | `sa` (usuário local do H2) |
+| `DEV_DB_PASSWORD` | Senha do usuário do banco. | Vazia para o H2 local |
+
+### Exemplo mínimo de conexão
+
+No PowerShell, ative o perfil e inicie a aplicação com os padrões acima.
+
+```powershell
+$env:SPRING_PROFILES_ACTIVE = 'dev'
+.\mvnw.cmd spring-boot:run
+```
+
+Com a aplicação em execução, verifique nos logs a aplicação da migração `V1` e a mensagem `Started OrganizowsApplication`. Em outro terminal, consulte o endpoint existente para verificar a leitura pelo repositório JPA. Em um banco novo, o campo `data` contém uma lista vazia.
+
+```powershell
+Invoke-RestMethod http://localhost:8080/api/v1/localizacoes | ConvertTo-Json -Depth 5
+```
+
+O teste de inicialização existente pode ser executado em um terminal com os padrões do perfil `dev` e sem sobrescritas de datasource.
+
+```powershell
+.\mvnw.cmd '-Dtest=OrganizowsApplicationDevProfileTest' test
+```
 
 - **Perfil Padrão (`h2`):** Configurado como perfil default via `spring.profiles.default=h2`. Permite que novos desenvolvedores clonem o repositório e iniciem imediatamente a aplicação e testes com banco em memória H2 e migrações Flyway aplicadas automaticamente sem dependências externas.
 - **Perfis de Homologação/Produção:** O ambiente externo pode definir `SPRING_PROFILES_ACTIVE=prod` e injetar credenciais e chaves via variáveis de ambiente (`SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`).
-- **Segurança de Segredos:** Nenhuma senha, token ou chave de API deve ser versionada no repositório. O arquivo `.gitignore` já bloqueia `.env`, arquivos de credenciais e certificados.
+- **Segurança de Segredos:** Defina credenciais reais no ambiente do processo e mantenha-as fora do Git. O arquivo `.gitignore` já bloqueia `.env`, arquivos de credenciais e certificados.
 
 ---
 
