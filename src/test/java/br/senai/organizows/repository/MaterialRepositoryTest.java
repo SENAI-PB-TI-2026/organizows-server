@@ -112,6 +112,26 @@ class MaterialRepositoryTest {
     }
 
     @Test
+    @DisplayName("Deve rejeitar persistÃªncia quando descriÃ§Ã£o obrigatÃ³ria estiver ausente")
+    void deveRejeitarDescricaoNula() {
+        Material materialSemDescricao = Material.builder()
+                .codigo("MAT-SEM-DESCRICAO")
+                .nome("Material sem descrição")
+                .grupo("Testes")
+                .categoria(CategoriaMaterial.COMPONENTE_ELETRONICO)
+                .status(StatusMaterial.DISPONIVEL)
+                .quantidadeDisponivel(0)
+                .quantidadeMinima(0)
+                .localizacao(localizacaoSalva)
+                .build();
+
+        assertThrows(DataIntegrityViolationException.class, () -> {
+            materialRepository.save(materialSemDescricao);
+            entityManager.flush();
+        });
+    }
+
+    @Test
     @DisplayName("Deve buscar materiais para reposição onde saldo <= estoque mínimo")
     void deveBuscarMateriaisParaReposicao() {
         // mat1: 3 <= 5 -> alerta (menor que mínimo)

@@ -3,6 +3,7 @@ package br.senai.organizows.controller;
 import br.senai.organizows.dto.AjusteSaldoRequestDTO;
 import br.senai.organizows.dto.MaterialRequestDTO;
 import br.senai.organizows.dto.MaterialResponseDTO;
+import br.senai.organizows.dto.MaterialUpdateRequestDTO;
 import br.senai.organizows.dto.response.ApiResponse;
 import br.senai.organizows.service.MaterialService;
 import jakarta.validation.Valid;
@@ -49,7 +50,7 @@ public class MaterialController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<MaterialResponseDTO>> atualizar(
-            @PathVariable Long id, @Valid @RequestBody MaterialRequestDTO dto) {
+            @PathVariable Long id, @Valid @RequestBody MaterialUpdateRequestDTO dto) {
         return ResponseEntity.ok(ApiResponse.success("Material atualizado com sucesso",
                 materialService.atualizar(id, dto)));
     }

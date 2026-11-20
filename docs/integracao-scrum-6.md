@@ -1,28 +1,80 @@
-﻿# Integração de materiais — PR #4 / SCRUM-6
+# Catálogo e saldo de materiais — PR #4
 
-## Alterações desta revisão
+## Contrato da API
 
-- O `Material` continua relacionado à entidade `Localizacao` compartilhada pela implementação de SCRUM-18, pela FK `material.localizacao_id`. Cadastro rejeita localização ausente ou inexistente; `Local` concorrente e segunda V1 não existem no diff atual do PR.
-- O cadastro aceita e persiste código único, nome, descrição, características, grupo/subgrupo, categoria/status, modelo, especificações técnicas, localização e quantidades. A resposta de criação e consulta expõe também `modelo` e `especificacoesTecnicas`, permitindo distinguir componentes semelhantes; inclui ainda nome/endereço hierárquico da localização.
-- Campos técnicos foram adicionados em V4 aditiva; V1–V3 não foram alteradas nesta revisão. V4 também restringe valores de categoria/status aos enums da API.
-- Quantidades não negativas são validadas nos DTOs e protegidas por CHECKs V3. Ajuste de saldo é transacional, usa lock pessimista, rejeita delta nulo/zero, saldo negativo e overflow. O PUT cadastral preserva saldo.
-- O alerta dispara somente quando `quantidadeDisponivel < quantidadeMinima`, conforme SCRUM-12 (“abaixo do mínimo”); igualdade não dispara.
-- O ajuste permanece disponível em `POST /api/v1/materiais/{id}/ajuste-saldo`; `PATCH /api/v1/materiais/{id}/saldo` usa a mesma operação para compatibilidade com o contrato já exercitado nos testes.
+O cadastro inicial usa `MaterialRequestDTO` e recebe o saldo inicial:
 
-## Validação executada
+```http
+POST /api/v1/materiais
+```
 
-- `java -version`: Java 25.0.1.
-- Última execução anterior a esta revisão do DTO: `./mvnw clean verify` (Windows: `./mvnw.cmd clean verify`), 96 testes, 0 falhas, 0 erros, 0 ignorados. Essa execução não inclui as novas asserções de `modelo` e `especificacoesTecnicas` adicionadas agora; os testes precisam ser executados novamente.
-- Os testes Flyway partiram de H2 vazio e aplicaram V1–V4; Hibernate validou o esquema e a suíte incluiu testes de vínculo, validação HTTP, saldo e concorrência. Os testes de controller foram atualizados para conferir os campos técnicos no cadastro e nas consultas por ID e código.
-- `git diff --check`: sem erros de whitespace.
-- Maven emitiu avisos de acesso 401 a metadados de repositórios opcionais e aviso de que Flyway ainda não verificou H2 2.4.240; os artefatos necessários estavam disponíveis e o build terminou com sucesso.
+```json
+{
+  "codigo": "MAT-001",
+  "nome": "Cabo de rede",
+  "descricao": "Cabo azul Cat6",
+  "caracteristicas": "305 metros",
+  "modelo": "Cat6",
+  "especificacoesTecnicas": "4 pares trançados",
+  "grupo": "Cabos",
+  "subgrupo": "Rede",
+  "categoria": "CABO",
+  "status": "DISPONIVEL",
+  "localId": 1,
+  "quantidadeDisponivel": 20,
+  "quantidadeMinima": 5
+}
+```
 
-## Pendências e limites de escopo
+A atualização cadastral usa `MaterialUpdateRequestDTO`, que **não possui `quantidadeDisponivel`**. O saldo atual é preservado; `quantidadeMinima` continua editável:
 
-- SCRUM-21 exige hierarquia de grupos/subgrupos e valores válidos, mas os cartões consultados não definem quais grupos/subgrupos são válidos. A implementação ainda guarda grupo/subgrupo como texto; é necessária decisão da equipe antes de declarar a hierarquia completa.
-- O enum atual oferece categorias de ferramentas, equipamentos e componentes, mas não valida vínculo entre um subgrupo e a categoria. Esse critério permanece parcial até a decisão do catálogo.
-- SCRUM-11 menciona imagem/URL; esse atributo não foi incluído nesta entrega. CRUD e busca por código/grupo cobrem apenas parte dos cartões dependentes.
-- Não há entidade/histórico de movimentações. O saldo é ajustado, mas SCRUM-13 não está concluída; o histórico pertence à SCRUM-26 e não foi inventado aqui.
-- O módulo `Peca` do PR #2 não está na `develop` consultada e não foi alterado. Na branch existente do PR #2, `Peca` é uma entidade separada (`tb_pecas`) com categoria/descrição, estoque próprio e localização em texto; não há vínculo explícito com `Material`. Até a equipe definir se peça é subtipo de material ou cadastro distinto, este PR mantém os modelos separados e não sincroniza seus saldos/localizações.
-- Não se confirmou se V2/V3 foram aplicadas em algum banco compartilhado. Não as reescrevi. Antes de promover V4 a um banco persistente, confirme os dados existentes, sobretudo valores de categoria/status antes do novo CHECK. Se V2/V3 já tiverem sido aplicadas com checksums diferentes, não use `repair` nem reescreva histórico: preparar migration corretiva após inspeção dos dados.
-- Não houve commit, push, merge/rebase ou alteração no Jira.
+```http
+PUT /api/v1/materiais/{id}
+```
+
+```json
+{
+  "codigo": "MAT-001",
+  "nome": "Cabo de rede",
+  "descricao": "Cabo azul Cat6",
+  "caracteristicas": "305 metros",
+  "modelo": "Cat6",
+  "especificacoesTecnicas": "4 pares trançados",
+  "grupo": "Cabos",
+  "subgrupo": "Rede",
+  "categoria": "CABO",
+  "status": "DISPONIVEL",
+  "localId": 1,
+  "quantidadeMinima": 8
+}
+```
+
+O saldo só muda pelas operações específicas:
+
+- `POST /api/v1/materiais/{id}/ajuste-saldo` com `{"deltaQuantidade": 5}`;
+- `PATCH /api/v1/materiais/{id}/saldo?delta=5` (também aceita o delta no corpo).
+
+Swagger/OpenAPI deriva os campos dos DTOs dos endpoints. A descrição é obrigatória: a validação de entrada limita-a a 150 caracteres, a entidade JPA declara `nullable = false` e a migration V2 mantém `NOT NULL`. Falhas de validação da requisição retornam 400; violações de integridade do banco são convertidas pelo handler existente em 409.
+
+## Escopo e situação por cartão
+
+| Cartão | Cobertura nesta branch | Pendente |
+|---|---|---|
+| SCRUM-6 | Código único, nome, grupo, características, modelo, quantidade, localização canônica e validação de chave existente. | Nenhum critério original identificado como pendente. |
+| SCRUM-11 | CRUD, descrição/características, localização, consulta e distinção por modelo/especificações. | Foto ou URL de imagem não existe; cartão permanece parcial. |
+| SCRUM-12 | Quantidade mínima configurável; alerta quando disponível `<` mínimo; igualdade ou valor maior não alerta; ajuste recalcula o alerta na resposta/consulta. | A cobertura não conclui os dependentes SCRUM-13 e SCRUM-23 nem fluxo de notificação; cartão permanece parcial. |
+| SCRUM-13 | Ajuste transacional com bloqueio pessimista, delta zero rejeitado e saldo negativo recusado. | Não existe lançamento/histórico de movimentação atômico com o saldo; critério correspondente e dependências SCRUM-22/SCRUM-26 permanecem pendentes. |
+| SCRUM-21 | Categoria é enum e o material possui grupo e subgrupo textuais; busca por grupo está disponível. | Catálogo hierárquico e validação de que o subgrupo pertence à categoria não estão implementados; cartão permanece parcial. |
+
+## Validação
+
+- `./mvnw.cmd clean test`, executado após estas correções com Java 25.0.1: 99 testes, 0 falhas, 0 erros e 0 ignorados.
+- Flyway aplicou V1–V4 em H2 vazio e Hibernate validou o mapeamento JPA durante a suíte.
+- Banco-alvo persistente: conferir dados existentes e checksums antes de aplicar V4; não reescrever migrações já aplicadas nem executar `flyway repair` sem análise.
+- PostgreSQL não foi validado nesta revisão; a configuração local de testes usa H2.
+
+## Integrações e limites
+
+- `Material` usa `Localizacao` e a FK `material.localizacao_id`, conforme a integração de SCRUM-18.
+- O módulo `Peca` do PR #2 não foi alterado. Até decisão da equipe sobre a relação entre peça e material, seus registros e saldos continuam separados.
+- Este PR não declara SCRUM-11, SCRUM-12, SCRUM-13 ou SCRUM-21 concluídas.

@@ -17,7 +17,7 @@ import lombok.AllArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MaterialRequestDTO {
+public class MaterialRequestDTO implements MaterialCadastroDTO {
 
     @NotBlank(message = "O código do material é obrigatório")
     @Size(max = 50)

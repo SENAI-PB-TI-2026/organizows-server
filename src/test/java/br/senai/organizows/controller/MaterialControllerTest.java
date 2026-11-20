@@ -2,6 +2,7 @@ package br.senai.organizows.controller;
 
 import br.senai.organizows.dto.AjusteSaldoRequestDTO;
 import br.senai.organizows.dto.MaterialRequestDTO;
+import br.senai.organizows.dto.MaterialUpdateRequestDTO;
 import br.senai.organizows.enums.CategoriaMaterial;
 import br.senai.organizows.enums.StatusMaterial;
 import br.senai.organizows.model.Localizacao;
@@ -140,6 +141,28 @@ class MaterialControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/v1/materiais - Deve retornar 400 quando descriÃ§Ã£o exceder 150 caracteres")
+    void deveRetornar400QuandoDescricaoExcederLimite() throws Exception {
+        MaterialRequestDTO invalido = MaterialRequestDTO.builder()
+                .codigo("MAT-DESC-LONGA")
+                .nome("Material com descriÃ§Ã£o longa")
+                .descricao("d".repeat(151))
+                .grupo("Testes")
+                .categoria(CategoriaMaterial.COMPONENTE_ELETRONICO)
+                .status(StatusMaterial.DISPONIVEL)
+                .quantidadeDisponivel(0)
+                .quantidadeMinima(0)
+                .localId(localizacaoSalva.getId())
+                .build();
+
+        mockMvc.perform(post("/api/v1/materiais")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalido)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors[?(@.field == 'descricao')]").exists());
+    }
+
+    @Test
     @DisplayName("POST /api/v1/materiais - Deve retornar 404 Not Found quando localização não existir")
     void deveRetornar404QuandoLocalIdInexistente() throws Exception {
         MaterialRequestDTO semLocal = MaterialRequestDTO.builder()
@@ -253,14 +276,13 @@ class MaterialControllerTest {
     @Test
     @DisplayName("PUT /api/v1/materiais/{id} - Deve retornar 200 OK ao atualizar e preservar saldo atual")
     void deveRetornar200AoAtualizarEPreservarSaldo() throws Exception {
-        MaterialRequestDTO atualizacao = MaterialRequestDTO.builder()
+        MaterialUpdateRequestDTO atualizacao = MaterialUpdateRequestDTO.builder()
                 .codigo("MAT-CTRL-1")
                 .nome("Cabo UTP Cat6 Alterado")
                 .descricao("Nova Descrição")
                 .grupo("Cabos")
                 .categoria(CategoriaMaterial.CABO)
                 .status(StatusMaterial.DISPONIVEL)
-                .quantidadeDisponivel(999) // Tentativa de alterar saldo via PUT
                 .quantidadeMinima(15)
                 .localId(localizacaoSalva.getId())
                 .build();

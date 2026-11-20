@@ -30,7 +30,7 @@ public class Material {
     @Column(nullable = false, length = 150)
     private String nome;
 
-    @Column(length = 150)
+    @Column(nullable = false, length = 150)
     private String descricao;
 
     @Column(length = 500)

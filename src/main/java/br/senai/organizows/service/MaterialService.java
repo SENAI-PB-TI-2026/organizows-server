@@ -1,7 +1,9 @@
 package br.senai.organizows.service;
 
 import br.senai.organizows.dto.MaterialRequestDTO;
+import br.senai.organizows.dto.MaterialCadastroDTO;
 import br.senai.organizows.dto.MaterialResponseDTO;
+import br.senai.organizows.dto.MaterialUpdateRequestDTO;
 import br.senai.organizows.exception.ResourceNotFoundException;
 import br.senai.organizows.exception.CodigoMaterialDuplicadoException;
 import br.senai.organizows.model.Localizacao;
@@ -58,11 +60,14 @@ public class MaterialService {
     }
 
     @Transactional
-    public MaterialResponseDTO atualizar(Long id, MaterialRequestDTO dto) {
+    public MaterialResponseDTO atualizar(Long id, MaterialUpdateRequestDTO dto) {
+        return atualizarCadastro(id, dto);
+    }
+
+    private MaterialResponseDTO atualizarCadastro(Long id, MaterialCadastroDTO dto) {
         Material material = materialRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Material não encontrado com ID: " + id));
-        // Atualizações cadastrais não podem substituir o saldo e contornar uma movimentação concorrente.
-        validarQuantidades(dto);
+        validarQuantidadeMinima(dto.getQuantidadeMinima());
         preencherCadastro(material, dto);
         return new MaterialResponseDTO(materialRepository.save(material));
     }
@@ -101,12 +106,13 @@ public class MaterialService {
         return new MaterialResponseDTO(materialRepository.save(material));
     }
 
-    private void preencherCadastro(Material material, MaterialRequestDTO dto) {
+    private void preencherCadastro(Material material, MaterialCadastroDTO dto) {
         if (dto.getCodigo() == null || dto.getCodigo().isBlank()
                 || dto.getNome() == null || dto.getNome().isBlank()
+                || dto.getDescricao() == null || dto.getDescricao().isBlank()
                 || dto.getGrupo() == null || dto.getGrupo().isBlank()
                 || dto.getCategoria() == null || dto.getStatus() == null) {
-            throw new IllegalArgumentException("Código, nome, grupo, categoria e status são obrigatórios.");
+            throw new IllegalArgumentException("Código, nome, descrição, grupo, categoria e status são obrigatórios.");
         }
         if (dto.getLocalId() == null) {
             throw new IllegalArgumentException("A localização do material é obrigatória.");
@@ -138,7 +144,11 @@ public class MaterialService {
         if (dto.getQuantidadeDisponivel() == null || dto.getQuantidadeDisponivel() < 0) {
             throw new IllegalArgumentException("A quantidade disponível é obrigatória e não pode ser negativa.");
         }
-        if (dto.getQuantidadeMinima() == null || dto.getQuantidadeMinima() < 0) {
+        validarQuantidadeMinima(dto.getQuantidadeMinima());
+    }
+
+    private void validarQuantidadeMinima(Integer quantidadeMinima) {
+        if (quantidadeMinima == null || quantidadeMinima < 0) {
             throw new IllegalArgumentException("A quantidade mínima é obrigatória e não pode ser negativa.");
         }
     }

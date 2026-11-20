@@ -2,6 +2,7 @@ package br.senai.organizows.service;
 
 import br.senai.organizows.dto.MaterialRequestDTO;
 import br.senai.organizows.dto.MaterialResponseDTO;
+import br.senai.organizows.dto.MaterialUpdateRequestDTO;
 import br.senai.organizows.enums.CategoriaMaterial;
 import br.senai.organizows.enums.StatusMaterial;
 import br.senai.organizows.exception.CodigoMaterialDuplicadoException;
@@ -39,6 +40,7 @@ class MaterialServiceTest {
     private Localizacao localizacao;
     private Material material;
     private MaterialRequestDTO requestDTO;
+    private MaterialUpdateRequestDTO updateRequestDTO;
 
     @BeforeEach
     void setUp() {
@@ -74,6 +76,20 @@ class MaterialServiceTest {
                 .especificacoesTecnicas("305m")
                 .status(StatusMaterial.DISPONIVEL)
                 .quantidadeDisponivel(20)
+                .quantidadeMinima(10)
+                .localId(1L)
+                .build();
+
+        updateRequestDTO = MaterialUpdateRequestDTO.builder()
+                .codigo("MAT-100")
+                .nome("Cabo de Rede")
+                .descricao("Cabo Azul Cat6")
+                .grupo("Cabos")
+                .categoria(CategoriaMaterial.CABO)
+                .subgrupo("Rede")
+                .modelo("Cat6")
+                .especificacoesTecnicas("305m")
+                .status(StatusMaterial.DISPONIVEL)
                 .quantidadeMinima(10)
                 .localId(1L)
                 .build();
@@ -145,6 +161,17 @@ class MaterialServiceTest {
     }
 
     @Test
+    @DisplayName("Deve rejeitar criaÃ§Ã£o sem descriÃ§Ã£o antes de persistir")
+    void deveRejeitarCriacaoSemDescricao() {
+        when(materialRepository.existsByCodigo("MAT-100")).thenReturn(false);
+        requestDTO.setDescricao(null);
+
+        assertThrows(IllegalArgumentException.class, () -> materialService.criar(requestDTO));
+
+        verify(materialRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Deve buscar por ID com sucesso")
     void deveBuscarPorIdComSucesso() {
         when(materialRepository.findById(10L)).thenReturn(Optional.of(material));
@@ -170,10 +197,9 @@ class MaterialServiceTest {
         when(localizacaoRepository.findById(1L)).thenReturn(Optional.of(localizacao));
         when(materialRepository.save(any(Material.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        requestDTO.setNome("Cabo de Rede Alterado");
-        requestDTO.setQuantidadeDisponivel(999); // Tentativa de alterar saldo pelo PUT
+        updateRequestDTO.setNome("Cabo de Rede Alterado");
 
-        MaterialResponseDTO response = materialService.atualizar(10L, requestDTO);
+        MaterialResponseDTO response = materialService.atualizar(10L, updateRequestDTO);
 
         assertNotNull(response);
         assertEquals("Cabo de Rede Alterado", response.getNome());
