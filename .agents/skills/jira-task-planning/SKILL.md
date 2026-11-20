@@ -1,0 +1,21 @@
+---
+name: jira-task-planning
+description: Traduzir tarefas Jira SCRUM e seus critérios de aceite em pequenos passos de implementação compreensíveis para estudantes. Use no início de cada tarefa e ao revisar escopo.
+---
+
+# Planejamento simples a partir do Jira
+
+1. Leia a tarefa, responsável e critérios de aceite (ou peça o texto se não puder acessar o Jira). Não invente requisitos.
+2. Compare com `origin/develop` e liste o que já existe, o que precisa criar e o que depende da contribuição de outro colega.
+3. Organize passos pequenos: modelo (se necessário), repository, service, controller, DTOs e verificação manual, apenas quando exigidos pelo cartão.
+4. Explique brevemente cada passo em linguagem adequada a alunos.
+5. Evite criar funções não pedidas e bibliotecas novas sem justificativa; preserve classes dos demais integrantes.
+6. Para cada critério, proponha um exemplo manual de verificação: ação, resultado esperado, resposta recebida (somente se testada).
+7. No final, apresente `critério | arquivo(s) | modo de verificar | situação`. Não marque concluído apenas por existir código.
+8. Não altere o status no Jira sem autorização. Não presuma que testes automatizados são obrigatórios.
+
+## Critérios relacionados a login e permissões
+Se o cartão tratar de login, senha, autenticação ou autorização, informe que o conteúdo ainda não foi ensinado e sinalize a dependência de orientação do professor. Não mude o status do cartão nem gere implementação de autenticação improvisada. Para outras tarefas, não acrescente autenticação como escopo extra.
+
+## Quando o aluno cola a descrição do cartão
+Não presuma integração com Jira. Leia o texto integral copiado pelo aluno e extraia: chave `SCRUM-N`, título, objetivo, entregas, critérios, dependências e bloco `Instruções para o agente`. As informações de `Branch sugerida` e `Commit sugerido` são **orientações**, nunca substitutos dos critérios originais nem comprovação do que foi feito. Passe a chave e a branch à skill `git-pr-workflow` para criar a branch local antes de modificar o código. Se faltar algum item essencial, pergunte apenas o necessário.
