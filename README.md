@@ -133,11 +133,50 @@ Tratamento centralizado pelo `GlobalExceptionHandler`:
 
 ---
 
-## Perfis de Ambiente e Segurança de Credenciais
+## Configuração Compartilhada de Persistência e Banco de Dados (SCRUM-76)
 
-- **Perfil Padrão (`h2`):** Configurado como perfil default via `spring.profiles.default=h2`. Permite que novos desenvolvedores clonem o repositório e iniciem imediatamente a aplicação e testes com banco em memória H2 e migrações Flyway aplicadas automaticamente sem dependências externas.
-- **Perfis de Homologação/Produção:** O ambiente externo pode definir `SPRING_PROFILES_ACTIVE=prod` e injetar credenciais e chaves via variáveis de ambiente (`SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`).
-- **Segurança de Segredos:** Nenhuma senha, token ou chave de API deve ser versionada no repositório. O arquivo `.gitignore` já bloqueia `.env`, arquivos de credenciais e certificados.
+O backend do OrganizoWS adota convenções padronizadas para persistência de dados com JPA/Hibernate e controle de evolução de esquema com Flyway:
+
+### Convenções de Acesso e Persistência
+1. **Flyway Migrations:** O versionamento do esquema é centralizado em scripts SQL em `src/main/resources/db/migration/` (ex: `V1__create_table_localizacao.sql`). As migrações são executadas automaticamente na inicialização da aplicação (`spring.flyway.enabled=true`).
+2. **JPA / Hibernate:** A estratégia de DDL é configurada estritamente como `spring.jpa.hibernate.ddl-auto=validate`, garantindo que o Flyway seja a única fonte de verdade para a estrutura do banco de dados, enquanto o Hibernate apenas valida a compatibilidade das entidades mapeadas.
+3. **Isolamento de Credenciais:** Dados sensíveis de conexão nunca devem ser commitados no repositório. O arquivo `.gitignore` bloqueia `.env`, chaves e arquivos de credenciais. Um modelo sem dados confidenciais é fornecido em `.env.example`.
+
+### Perfis de Execução
+
+- **Perfil Padrão (`h2`):** Ativo por padrão (`spring.profiles.default=h2`). Executa um banco em memória volátil, ideal para testes rápidos sem pré-requisitos de instalação.
+- **Perfil de Desenvolvimento (`dev`):** Ativado com `SPRING_PROFILES_ACTIVE=dev` ou `-Dspring.profiles.active=dev`. Utiliza as convenções de banco de desenvolvimento (`application-dev.properties`), suportando injeção flexível de variáveis de ambiente com fallback para H2 persistido em memória.
+
+### Tabela de Variáveis de Ambiente Suportadas
+
+| Variável | Padrão (Perfil `dev`) | Descrição |
+| :--- | :--- | :--- |
+| `SPRING_PROFILES_ACTIVE` | `h2` | Perfil ativo do Spring Boot (`dev`, `h2`, `prod`). |
+| `DEV_DB_URL` / `SPRING_DATASOURCE_URL` | `jdbc:h2:mem:organizows_dev;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE` | URL de conexão JDBC do banco de desenvolvimento. |
+| `DEV_DB_DRIVER` / `SPRING_DATASOURCE_DRIVER_CLASS_NAME` | `org.h2.Driver` | Classe do driver JDBC do banco. |
+| `DEV_DB_USER` / `SPRING_DATASOURCE_USERNAME` | `sa` | Usuário de autenticação no banco. |
+| `DEV_DB_PASSWORD` / `SPRING_DATASOURCE_PASSWORD` | *(vazio)* | Senha de autenticação no banco (nunca versionar no Git). |
+| `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:3000,http://localhost:5173` | Origens autorizadas para requisições do frontend. |
+
+### Como Utilizar o Arquivo de Exemplo (`.env.example`)
+
+1. Copie o arquivo `.env.example` para `.env`:
+   ```bash
+   # Windows PowerShell
+   Copy-Item .env.example .env
+
+   # Linux / macOS
+   cp .env.example .env
+   ```
+2. Ajuste os valores de conexão conforme seu ambiente local (ex: banco PostgreSQL local ou parâmetros específicos).
+3. Execute a aplicação com o perfil de desenvolvimento:
+   ```bash
+   # Windows
+   .\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=dev
+
+   # Linux / macOS
+   ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+   ```
 
 ---
 
