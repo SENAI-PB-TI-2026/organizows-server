@@ -22,5 +22,6 @@
 - [ ] Revisei as alterações e não incluí arquivos pessoais/segredos.
 - [ ] Informei como conferir a funcionalidade manualmente.
 - [ ] Solicitei revisão de outro integrante.
+- [ ] O merge em `develop` só será feito depois da aprovação de outro integrante.
 
 > Testes automatizados não são exigidos nesta etapa do curso. Não declare uma validação que não executou.
