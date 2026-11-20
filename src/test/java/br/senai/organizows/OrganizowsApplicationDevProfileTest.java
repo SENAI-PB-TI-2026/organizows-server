@@ -51,7 +51,7 @@ class OrganizowsApplicationDevProfileTest {
     @DisplayName("Deve aplicar migrações Flyway automaticamente no perfil dev sem intervenção manual")
     void deveAplicarMigracoesFlywayAutomaticamenteNoPerfilDev() throws SQLException {
         assertThat(flyway.info().current()).isNotNull();
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("1");
+        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("4");
 
         try (Connection conn = dataSource.getConnection()) {
             DatabaseMetaData metaData = conn.getMetaData();
