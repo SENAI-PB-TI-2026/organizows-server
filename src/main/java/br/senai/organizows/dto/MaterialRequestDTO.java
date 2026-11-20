@@ -8,9 +8,15 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class MaterialRequestDTO {
 
     @NotBlank(message = "O código do material é obrigatório")
@@ -27,6 +33,12 @@ public class MaterialRequestDTO {
 
     @Size(max = 500)
     private String caracteristicas;
+
+    @Size(max = 100)
+    private String modelo;
+
+    @Size(max = 500)
+    private String especificacoesTecnicas;
 
     @NotBlank(message = "O grupo do material é obrigatório")
     @Size(max = 80)

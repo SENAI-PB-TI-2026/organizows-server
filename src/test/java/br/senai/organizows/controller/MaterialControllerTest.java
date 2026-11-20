@@ -55,6 +55,7 @@ class MaterialControllerTest {
                 .codigo("MAT-CTRL-1")
                 .nome("Cabo UTP Cat6")
                 .descricao("Cabo Azul 305m")
+                .grupo("Cabos")
                 .categoria(CategoriaMaterial.CABO)
                 .subgrupo("Rede")
                 .modelo("Furukawa Cat6")
@@ -74,6 +75,7 @@ class MaterialControllerTest {
                 .codigo("MAT-NOVO-1")
                 .nome("Patch Cord Cat6")
                 .descricao("Cabo 1.5m")
+                .grupo("Cabos")
                 .categoria(CategoriaMaterial.CABO)
                 .subgrupo("Conectividade")
                 .modelo("Furukawa")
@@ -92,6 +94,8 @@ class MaterialControllerTest {
                 .andExpect(jsonPath("$.data.id").isNumber())
                 .andExpect(jsonPath("$.data.codigo").value("MAT-NOVO-1"))
                 .andExpect(jsonPath("$.data.nome").value("Patch Cord Cat6"))
+                .andExpect(jsonPath("$.data.modelo").value("Furukawa"))
+                .andExpect(jsonPath("$.data.especificacoesTecnicas").value("RJ45"))
                 .andExpect(jsonPath("$.data.localId").value(localizacaoSalva.getId()))
                 .andExpect(jsonPath("$.data.localizacaoNome").value("Prateleira Controller"));
     }
@@ -141,6 +145,8 @@ class MaterialControllerTest {
         MaterialRequestDTO semLocal = MaterialRequestDTO.builder()
                 .codigo("MAT-SEM-LOCAL")
                 .nome("Material Sem Local")
+                .descricao("Material de teste")
+                .grupo("Testes")
                 .categoria(CategoriaMaterial.FERRAMENTA)
                 .status(StatusMaterial.DISPONIVEL)
                 .quantidadeDisponivel(10)
@@ -161,10 +167,13 @@ class MaterialControllerTest {
         MaterialRequestDTO duplicado = MaterialRequestDTO.builder()
                 .codigo("MAT-CTRL-1")
                 .nome("Outro Cabo")
+                .descricao("Material duplicado")
+                .grupo("Cabos")
                 .categoria(CategoriaMaterial.CABO)
                 .status(StatusMaterial.DISPONIVEL)
                 .quantidadeDisponivel(5)
                 .quantidadeMinima(1)
+                .localId(localizacaoSalva.getId())
                 .build();
 
         mockMvc.perform(post("/api/v1/materiais")
@@ -193,7 +202,9 @@ class MaterialControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.id").value(materialSalvo.getId()))
-                .andExpect(jsonPath("$.data.codigo").value("MAT-CTRL-1"));
+                .andExpect(jsonPath("$.data.codigo").value("MAT-CTRL-1"))
+                .andExpect(jsonPath("$.data.modelo").value("Furukawa Cat6"))
+                .andExpect(jsonPath("$.data.especificacoesTecnicas").value("4 pares trançados"));
     }
 
     @Test
@@ -210,7 +221,9 @@ class MaterialControllerTest {
         mockMvc.perform(get("/api/v1/materiais/codigo/{codigo}", "MAT-CTRL-1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.data.codigo").value("MAT-CTRL-1"));
+                .andExpect(jsonPath("$.data.codigo").value("MAT-CTRL-1"))
+                .andExpect(jsonPath("$.data.modelo").value("Furukawa Cat6"))
+                .andExpect(jsonPath("$.data.especificacoesTecnicas").value("4 pares trançados"));
     }
 
     @Test
@@ -220,10 +233,13 @@ class MaterialControllerTest {
         Material baixo = Material.builder()
                 .codigo("MAT-BAIXO-1")
                 .nome("Item Reposição")
+                .descricao("Material para reposição")
+                .grupo("Consumíveis")
                 .categoria(CategoriaMaterial.CONSUMIVEL)
                 .status(StatusMaterial.DISPONIVEL)
                 .quantidadeDisponivel(5)
                 .quantidadeMinima(10)
+                .localizacao(localizacaoSalva)
                 .build();
         materialRepository.save(baixo);
 
@@ -241,6 +257,7 @@ class MaterialControllerTest {
                 .codigo("MAT-CTRL-1")
                 .nome("Cabo UTP Cat6 Alterado")
                 .descricao("Nova Descrição")
+                .grupo("Cabos")
                 .categoria(CategoriaMaterial.CABO)
                 .status(StatusMaterial.DISPONIVEL)
                 .quantidadeDisponivel(999) // Tentativa de alterar saldo via PUT

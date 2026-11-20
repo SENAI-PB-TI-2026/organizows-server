@@ -4,6 +4,8 @@ import br.senai.organizows.enums.CategoriaMaterial;
 import br.senai.organizows.enums.StatusMaterial;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
@@ -14,6 +16,8 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Material {
 
     @Id
@@ -26,10 +30,7 @@ public class Material {
     @Column(nullable = false, length = 150)
     private String nome;
 
-    @Column(nullable = false, length = 150)
-    private String nome;
-
-    @Column(length = 255)
+    @Column(length = 150)
     private String descricao;
 
     @Column(length = 500)
@@ -38,14 +39,11 @@ public class Material {
     @Column(nullable = false, length = 80)
     private String grupo;
 
-    @Column(length = 80)
-    private String subgrupo;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private CategoriaMaterial categoria;
 
-    @Column(length = 100)
+    @Column(length = 80)
     private String subgrupo;
 
     @Column(length = 100)
@@ -99,5 +97,10 @@ public class Material {
 
     public Long getLocalId() {
         return localizacao == null ? null : localizacao.getId();
+    }
+
+    public boolean isAlertaReposicao() {
+        return quantidadeDisponivel != null && quantidadeMinima != null
+                && quantidadeDisponivel < quantidadeMinima;
     }
 }

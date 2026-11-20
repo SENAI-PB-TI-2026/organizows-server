@@ -67,6 +67,7 @@ class MaterialServiceTest {
                 .codigo("MAT-100")
                 .nome("Cabo de Rede")
                 .descricao("Cabo Azul Cat6")
+                .grupo("Cabos")
                 .categoria(CategoriaMaterial.CABO)
                 .subgrupo("Rede")
                 .modelo("Cat6")
@@ -127,26 +128,18 @@ class MaterialServiceTest {
     }
 
     @Test
-    @DisplayName("Deve permitir criação com localId nulo")
-    void devePermitirCriacaoComLocalIdNulo() {
+    @DisplayName("Deve rejeitar criação com localId nulo")
+    void deveRejeitarCriacaoComLocalIdNulo() {
         requestDTO.setLocalId(null);
-        when(materialRepository.existsByCodigo("MAT-100")).thenReturn(false);
-        when(materialRepository.save(any(Material.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        MaterialResponseDTO response = materialService.criar(requestDTO);
-
-        assertNotNull(response);
-        assertNull(response.getLocalId());
+        assertThrows(IllegalArgumentException.class, () -> materialService.criar(requestDTO));
         verify(localizacaoRepository, never()).findById(any());
-        verify(materialRepository).save(any(Material.class));
+        verify(materialRepository, never()).save(any(Material.class));
     }
 
     @Test
     @DisplayName("Deve rejeitar quantidades negativas na criação")
     void deveRejeitarQuantidadesNegativasAoCriar() {
         requestDTO.setQuantidadeDisponivel(-1);
-        when(materialRepository.existsByCodigo("MAT-100")).thenReturn(false);
-
         assertThrows(IllegalArgumentException.class, () -> materialService.criar(requestDTO));
         verify(materialRepository, never()).save(any());
     }
@@ -173,7 +166,7 @@ class MaterialServiceTest {
     @Test
     @DisplayName("Deve atualizar material e preservar o saldo atual contra desvios de fluxo")
     void deveAtualizarMaterialEPreservarSaldo() {
-        when(materialRepository.findById(10L)).thenReturn(Optional.of(material));
+        when(materialRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(material));
         when(localizacaoRepository.findById(1L)).thenReturn(Optional.of(localizacao));
         when(materialRepository.save(any(Material.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -190,7 +183,7 @@ class MaterialServiceTest {
     @Test
     @DisplayName("Deve deletar material existente com sucesso")
     void deveDeletarMaterialComSucesso() {
-        when(materialRepository.findById(10L)).thenReturn(Optional.of(material));
+        when(materialRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(material));
 
         materialService.deletar(10L);
 
@@ -272,7 +265,7 @@ class MaterialServiceTest {
         // Caso 2: igual ao mínimo (10 == 10) -> true (SCRUM-12 limiar exato)
         material.setQuantidadeDisponivel(9);
         MaterialResponseDTO r2 = materialService.ajustarSaldo(10L, 1); // vira 10
-        assertTrue(r2.getAlertaReposicao(), "Alerta deve ser ativado no limiar exato saldo == minimo");
+        assertFalse(r2.getAlertaReposicao(), "SCRUM-12 não alerta no limiar exato saldo == mínimo");
 
         // Caso 3: maior que o mínimo (11 > 10) -> false
         material.setQuantidadeDisponivel(10);

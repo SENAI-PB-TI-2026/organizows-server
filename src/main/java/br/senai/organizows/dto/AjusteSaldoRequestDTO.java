@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonAlias;
 
 @Getter
 @Setter
@@ -12,8 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class AjusteSaldoRequestDTO {
 
-    @NotNull(message = "A quantidade de ajuste (delta) é obrigatória")
-    private Integer delta;
     @NotNull(message = "O ajuste de saldo é obrigatório")
+    @JsonAlias("delta")
     private Integer deltaQuantidade;
 }

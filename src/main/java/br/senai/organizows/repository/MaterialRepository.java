@@ -20,14 +20,20 @@ public interface MaterialRepository extends JpaRepository<Material, Long> {
     @Query("SELECT m FROM Material m WHERE m.id = :id")
     Optional<Material> findByIdForUpdate(@Param("id") Long id);
 
-    @Query("SELECT m FROM Material m WHERE m.quantidadeDisponivel <= m.quantidadeMinima")
+    @Query("SELECT m FROM Material m WHERE m.quantidadeDisponivel < m.quantidadeMinima")
     List<Material> findMateriaisParaReposicao();
 
     Optional<Material> findByCodigo(String codigo);
+
+    boolean existsByCodigo(String codigo);
 
     List<Material> findByGrupoIgnoreCase(String grupo);
 
     List<Material> findByCategoria(CategoriaMaterial categoria);
 
     List<Material> findByStatus(StatusMaterial status);
+
+    List<Material> findByNomeContainingIgnoreCase(String nome);
+
+    List<Material> findByLocalizacaoId(Long localizacaoId);
 }

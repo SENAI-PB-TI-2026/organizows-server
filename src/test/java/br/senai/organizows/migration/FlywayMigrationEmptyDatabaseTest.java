@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class FlywayMigrationEmptyDatabaseTest {
 
     @Test
-    @DisplayName("Deve aplicar migração Flyway V1 com sucesso em um banco de dados totalmente vazio")
+    @DisplayName("Deve aplicar todas as migrações Flyway em um banco de dados totalmente vazio")
     void deveAplicarMigracaoFlywayEmBancoVazio() throws SQLException {
         // Criar um banco H2 exclusivo e vazio
         String dbName = "empty_db_" + UUID.randomUUID().toString().replace("-", "");
@@ -52,7 +52,7 @@ class FlywayMigrationEmptyDatabaseTest {
 
         assertThat(result.success).isTrue();
         assertThat(result.migrationsExecuted).isGreaterThanOrEqualTo(1);
-        assertThat(result.targetSchemaVersion).isEqualTo("1");
+        assertThat(result.targetSchemaVersion).isEqualTo("4");
 
         // Validar que a tabela e todas as colunas foram criadas corretamente
         try (Connection conn = dataSource.getConnection()) {

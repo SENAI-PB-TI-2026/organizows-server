@@ -42,6 +42,11 @@ public class MaterialController {
         return ResponseEntity.ok(ApiResponse.success(materialService.buscarPorId(id)));
     }
 
+    @GetMapping("/codigo/{codigo}")
+    public ResponseEntity<ApiResponse<MaterialResponseDTO>> buscarPorCodigo(@PathVariable String codigo) {
+        return ResponseEntity.ok(ApiResponse.success(materialService.buscarPorCodigo(codigo)));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<MaterialResponseDTO>> atualizar(
             @PathVariable Long id, @Valid @RequestBody MaterialRequestDTO dto) {
@@ -65,5 +70,14 @@ public class MaterialController {
             @PathVariable Long id, @Valid @RequestBody AjusteSaldoRequestDTO dto) {
         return ResponseEntity.ok(ApiResponse.success("Saldo ajustado com sucesso",
                 materialService.ajustarSaldo(id, dto.getDeltaQuantidade())));
+    }
+
+    @PatchMapping("/{id}/saldo")
+    public ResponseEntity<ApiResponse<MaterialResponseDTO>> atualizarSaldo(
+            @PathVariable Long id, @RequestParam(required = false) Integer delta,
+            @RequestBody(required = false) AjusteSaldoRequestDTO body) {
+        Integer variacao = delta != null ? delta : body == null ? null : body.getDeltaQuantidade();
+        return ResponseEntity.ok(ApiResponse.success("Saldo ajustado com sucesso",
+                materialService.ajustarSaldo(id, variacao)));
     }
 }

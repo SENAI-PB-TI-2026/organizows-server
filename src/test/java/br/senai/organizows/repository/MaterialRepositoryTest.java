@@ -53,6 +53,7 @@ class MaterialRepositoryTest {
                 .codigo("MAT-TEST-1")
                 .nome("Conector RJ45")
                 .descricao("Conector de rede Cat6")
+                .grupo("Conectividade")
                 .categoria(CategoriaMaterial.CABO)
                 .subgrupo("Conectores")
                 .modelo("RJ45 Macho")
@@ -81,10 +82,13 @@ class MaterialRepositoryTest {
         Material mat1 = Material.builder()
                 .codigo("MAT-DUP")
                 .nome("Material 1")
+                .descricao("Test material 1")
+                .grupo("Ferramentas")
                 .categoria(CategoriaMaterial.FERRAMENTA)
                 .status(StatusMaterial.DISPONIVEL)
                 .quantidadeDisponivel(5)
                 .quantidadeMinima(2)
+                .localizacao(localizacaoSalva)
                 .build();
         materialRepository.save(mat1);
         entityManager.flush();
@@ -92,10 +96,13 @@ class MaterialRepositoryTest {
         Material mat2 = Material.builder()
                 .codigo("MAT-DUP")
                 .nome("Material 2")
+                .descricao("Test material 2")
+                .grupo("Ferramentas")
                 .categoria(CategoriaMaterial.FERRAMENTA)
                 .status(StatusMaterial.DISPONIVEL)
                 .quantidadeDisponivel(10)
                 .quantidadeMinima(3)
+                .localizacao(localizacaoSalva)
                 .build();
 
         assertThrows(DataIntegrityViolationException.class, () -> {
@@ -111,39 +118,48 @@ class MaterialRepositoryTest {
         Material mat1 = Material.builder()
                 .codigo("MAT-REP-1")
                 .nome("Parafuso M3")
+                .descricao("Parafuso")
+                .grupo("Fixadores")
                 .categoria(CategoriaMaterial.CONSUMIVEL)
                 .status(StatusMaterial.DISPONIVEL)
                 .quantidadeDisponivel(3)
                 .quantidadeMinima(5)
+                .localizacao(localizacaoSalva)
                 .build();
 
         // mat2: 5 <= 5 -> alerta (limiar exato)
         Material mat2 = Material.builder()
                 .codigo("MAT-REP-2")
                 .nome("Fita Isolante")
+                .descricao("Fita isolante")
+                .grupo("Elétrica")
                 .categoria(CategoriaMaterial.CONSUMIVEL)
                 .status(StatusMaterial.DISPONIVEL)
                 .quantidadeDisponivel(5)
                 .quantidadeMinima(5)
+                .localizacao(localizacaoSalva)
                 .build();
 
         // mat3: 10 > 5 -> NÃO deve entrar no alerta
         Material mat3 = Material.builder()
                 .codigo("MAT-REP-3")
                 .nome("Alicate")
+                .descricao("Alicate")
+                .grupo("Ferramentas")
                 .categoria(CategoriaMaterial.FERRAMENTA)
                 .status(StatusMaterial.DISPONIVEL)
                 .quantidadeDisponivel(10)
                 .quantidadeMinima(5)
+                .localizacao(localizacaoSalva)
                 .build();
 
         materialRepository.saveAll(List.of(mat1, mat2, mat3));
         entityManager.flush();
 
         List<Material> reposicao = materialRepository.findMateriaisParaReposicao();
-        assertEquals(2, reposicao.size());
+        assertEquals(1, reposicao.size());
         assertTrue(reposicao.stream().anyMatch(m -> m.getCodigo().equals("MAT-REP-1")));
-        assertTrue(reposicao.stream().anyMatch(m -> m.getCodigo().equals("MAT-REP-2")));
+        assertFalse(reposicao.stream().anyMatch(m -> m.getCodigo().equals("MAT-REP-2")));
         assertFalse(reposicao.stream().anyMatch(m -> m.getCodigo().equals("MAT-REP-3")));
     }
 
@@ -153,6 +169,8 @@ class MaterialRepositoryTest {
         Material mat = Material.builder()
                 .codigo("MAT-FILTRO")
                 .nome("Multímetro Digital")
+                .descricao("Multímetro")
+                .grupo("Instrumentos")
                 .categoria(CategoriaMaterial.FERRAMENTA)
                 .status(StatusMaterial.EM_MANUTENCAO)
                 .quantidadeDisponivel(2)

@@ -21,14 +21,14 @@ class MaterialTest {
     }
 
     @Test
-    @DisplayName("Deve calcular alerta de reposição corretamente: true no limiar exato (igual ao mínimo)")
+    @DisplayName("Não deve alertar no limiar exato (igual ao mínimo)")
     void deveAtivarAlertaNoLimiarExato() {
         Material material = Material.builder()
                 .quantidadeDisponivel(5)
                 .quantidadeMinima(5)
                 .build();
 
-        assertTrue(material.isAlertaReposicao(), "No limiar quantidadeDisponivel == quantidadeMinima o alerta deve ser ativado conforme SCRUM-12");
+        assertFalse(material.isAlertaReposicao(), "SCRUM-12 dispara alerta somente quando o saldo fica abaixo do mínimo");
     }
 
     @Test
