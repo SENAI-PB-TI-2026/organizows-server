@@ -127,17 +127,21 @@ class MaterialControllerTest {
         MaterialRequestDTO negativo = MaterialRequestDTO.builder()
                 .codigo("MAT-NEG-1")
                 .nome("Material Negativo")
+                .descricao("Material de teste")
+                .grupo("Testes")
                 .categoria(CategoriaMaterial.FERRAMENTA)
                 .status(StatusMaterial.DISPONIVEL)
                 .quantidadeDisponivel(-5)
                 .quantidadeMinima(2)
+                .localId(localizacaoSalva.getId())
                 .build();
 
         mockMvc.perform(post("/api/v1/materiais")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(negativo)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400));
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.fieldErrors[?(@.field == 'quantidadeDisponivel')]").exists());
     }
 
     @Test
