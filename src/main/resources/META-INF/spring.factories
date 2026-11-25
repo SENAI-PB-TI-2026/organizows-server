@@ -1,0 +1,2 @@
+org.springframework.context.ApplicationContextInitializer=br.senai.organizows.config.DevDataSourceInitializer
+org.springframework.boot.diagnostics.FailureAnalyzer=br.senai.organizows.config.DevConnectionFailureAnalyzer
