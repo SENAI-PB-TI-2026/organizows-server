@@ -4,6 +4,7 @@ import br.senai.organizows.exception.CodigoLocalizacaoDuplicadoException;
 import br.senai.organizows.exception.HierarquiaInvalidaException;
 import br.senai.organizows.model.Localizacao;
 import br.senai.organizows.repository.LocalizacaoRepository;
+import br.senai.organizows.repository.MaterialRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 
 @SpringBootTest
 @ActiveProfiles("h2")
@@ -206,7 +208,7 @@ class LocalizacaoServiceTest {
     @DisplayName("Deve traduzir DataIntegrityViolationException para CodigoLocalizacaoDuplicadoException quando violar uk_localizacao_codigo")
     void deveTraduzirDataIntegrityViolationExceptionParaCodigoDuplicado() {
         LocalizacaoRepository mockRepo = org.mockito.Mockito.mock(LocalizacaoRepository.class);
-        LocalizacaoService service = new LocalizacaoService(mockRepo);
+        LocalizacaoService service = new LocalizacaoService(mockRepo, mock(MaterialRepository.class));
 
         Localizacao loc = Localizacao.builder()
                 .codigo("COD-CONCORRENTE")
@@ -229,7 +231,7 @@ class LocalizacaoServiceTest {
     @DisplayName("Deve propagar DataIntegrityViolationException original quando violar outra restrição")
     void devePropagarDataIntegrityViolationExceptionQuandoOutraRestricao() {
         LocalizacaoRepository mockRepo = org.mockito.Mockito.mock(LocalizacaoRepository.class);
-        LocalizacaoService service = new LocalizacaoService(mockRepo);
+        LocalizacaoService service = new LocalizacaoService(mockRepo, mock(MaterialRepository.class));
 
         Localizacao loc = Localizacao.builder()
                 .codigo("COD-OUTRO")
