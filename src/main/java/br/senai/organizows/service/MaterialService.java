@@ -4,6 +4,7 @@ import br.senai.organizows.dto.MaterialRequestDTO;
 import br.senai.organizows.dto.MaterialCadastroDTO;
 import br.senai.organizows.dto.MaterialResponseDTO;
 import br.senai.organizows.dto.MaterialUpdateRequestDTO;
+import br.senai.organizows.enums.CategoriaMaterial;
 import br.senai.organizows.exception.ResourceNotFoundException;
 import br.senai.organizows.exception.CodigoMaterialDuplicadoException;
 import br.senai.organizows.exception.HierarquiaInvalidaException;
@@ -120,14 +121,8 @@ public class MaterialService {
             throw new IllegalArgumentException("A localização do material é obrigatória.");
         }
         String grupo = dto.getGrupo().trim();
-        String subgrupo = dto.getSubgrupo() == null || dto.getSubgrupo().isBlank()
-                ? null : dto.getSubgrupo().trim();
-        boolean classificacaoAlterada = dto.getCategoria() != material.getCategoria()
-                || !grupo.equals(material.getGrupo())
-                || !Objects.equals(subgrupo, material.getSubgrupo());
-        if (classificacaoAlterada && subgrupo != null && !dto.getCategoria().aceitaSubgrupo(grupo, subgrupo)) {
-            throw new HierarquiaInvalidaException("O subgrupo informado não pertence ao grupo e à categoria do material.");
-        }
+        String subgrupo = normalizarSubgrupo(dto.getSubgrupo());
+        atualizarClassificacao(material, dto.getCategoria(), grupo, subgrupo);
 
         material.setCodigo(dto.getCodigo().trim());
         material.setNome(dto.getNome().trim());
@@ -135,9 +130,6 @@ public class MaterialService {
         material.setCaracteristicas(dto.getCaracteristicas());
         material.setModelo(dto.getModelo());
         material.setEspecificacoesTecnicas(dto.getEspecificacoesTecnicas());
-        material.setGrupo(grupo);
-        material.setSubgrupo(subgrupo);
-        material.setCategoria(dto.getCategoria());
         material.setStatus(dto.getStatus());
         material.setQuantidadeMinima(dto.getQuantidadeMinima());
 
@@ -150,6 +142,27 @@ public class MaterialService {
                 .filter(existente -> !existente.getId().equals(material.getId()))
                 .ifPresent(existente -> { throw new CodigoMaterialDuplicadoException(
                         "Já existe um material cadastrado com o código: " + material.getCodigo()); });
+    }
+
+    private void atualizarClassificacao(Material material, CategoriaMaterial categoria, String grupo, String subgrupo) {
+        // Preserva a classificação legada quando a edição muda apenas outros campos.
+        if (categoria == material.getCategoria() && grupo.equals(material.getGrupo())
+                && Objects.equals(subgrupo, normalizarSubgrupo(material.getSubgrupo()))) {
+            return;
+        }
+        if (!categoria.aceitaGrupo(grupo)) {
+            throw new HierarquiaInvalidaException("O grupo informado não pertence à categoria do material.");
+        }
+        if (subgrupo != null && !categoria.aceitaSubgrupo(subgrupo)) {
+            throw new HierarquiaInvalidaException("O subgrupo informado não pertence ao grupo e à categoria do material.");
+        }
+        material.setCategoria(categoria);
+        material.setGrupo(grupo);
+        material.setSubgrupo(subgrupo);
+    }
+
+    private String normalizarSubgrupo(String subgrupo) {
+        return subgrupo == null || subgrupo.isBlank() ? null : subgrupo.trim();
     }
 
     private void validarQuantidades(MaterialRequestDTO dto) {

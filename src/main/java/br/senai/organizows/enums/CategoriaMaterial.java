@@ -26,8 +26,11 @@ public enum CategoriaMaterial {
         return CategoriaMaterial.valueOf(nome);
     }
 
-    public boolean aceitaSubgrupo(String grupo, String subgrupo) {
-        return this.grupo.equalsIgnoreCase(grupo)
-                && subgrupos.stream().anyMatch(subgrupo::equalsIgnoreCase);
+    public boolean aceitaGrupo(String grupo) {
+        return this.grupo.equalsIgnoreCase(grupo);
+    }
+
+    public boolean aceitaSubgrupo(String subgrupo) {
+        return subgrupos.stream().anyMatch(subgrupo::equalsIgnoreCase);
     }
 }

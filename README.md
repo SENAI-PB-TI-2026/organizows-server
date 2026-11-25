@@ -68,6 +68,12 @@ Gerenciamento do catálogo físico hierárquico (espaços, galpões, salas, arm�
 
 ---
 
+## Classificação de materiais
+
+No cadastro e na alteração de classificação, o grupo deve corresponder à categoria. Por exemplo, a categoria `FERRAMENTA` usa o grupo `Ferramentas` e pode usar o subgrupo `Manuais`. O subgrupo é opcional. Consulte os materiais de um grupo com `GET /api/v1/materiais?grupo=Ferramentas`.
+
+Materiais cadastrados antes dessa validação mantêm a classificação original quando são editados sem mudar categoria, grupo ou subgrupo. Para regularizar um cadastro, consulte-o com `GET /api/v1/materiais/{id}` e envie os campos cadastrais no `PUT /api/v1/materiais/{id}` com uma combinação compatível. Os grupos e subgrupos aceitos estão em `CategoriaMaterial.java`. A regularização é feita por material, sem alteração automática dos dados anteriores.
+
 ## Padrão de Respostas e Convenções (Contrato de Integração)
 
 Todas as equipes devem seguir as convenções abaixo ao implementar novos controllers e serviços nas próximas sprints:
