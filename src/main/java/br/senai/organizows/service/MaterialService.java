@@ -6,6 +6,7 @@ import br.senai.organizows.dto.MaterialResponseDTO;
 import br.senai.organizows.dto.MaterialUpdateRequestDTO;
 import br.senai.organizows.exception.ResourceNotFoundException;
 import br.senai.organizows.exception.CodigoMaterialDuplicadoException;
+import br.senai.organizows.exception.HierarquiaInvalidaException;
 import br.senai.organizows.model.Localizacao;
 import br.senai.organizows.model.Material;
 import br.senai.organizows.repository.LocalizacaoRepository;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Transactional(readOnly = true)
@@ -45,7 +47,7 @@ public class MaterialService {
     }
 
     public List<MaterialResponseDTO> listarPorGrupo(String grupo) {
-        return materialRepository.findByGrupoIgnoreCase(grupo).stream()
+        return materialRepository.findByGrupoIgnoreCase(grupo.trim()).stream()
                 .map(MaterialResponseDTO::new).toList();
     }
 
@@ -117,14 +119,24 @@ public class MaterialService {
         if (dto.getLocalId() == null) {
             throw new IllegalArgumentException("A localização do material é obrigatória.");
         }
+        String grupo = dto.getGrupo().trim();
+        String subgrupo = dto.getSubgrupo() == null || dto.getSubgrupo().isBlank()
+                ? null : dto.getSubgrupo().trim();
+        boolean classificacaoAlterada = dto.getCategoria() != material.getCategoria()
+                || !grupo.equals(material.getGrupo())
+                || !Objects.equals(subgrupo, material.getSubgrupo());
+        if (classificacaoAlterada && subgrupo != null && !dto.getCategoria().aceitaSubgrupo(grupo, subgrupo)) {
+            throw new HierarquiaInvalidaException("O subgrupo informado não pertence ao grupo e à categoria do material.");
+        }
+
         material.setCodigo(dto.getCodigo().trim());
         material.setNome(dto.getNome().trim());
         material.setDescricao(dto.getDescricao() == null ? null : dto.getDescricao().trim());
         material.setCaracteristicas(dto.getCaracteristicas());
         material.setModelo(dto.getModelo());
         material.setEspecificacoesTecnicas(dto.getEspecificacoesTecnicas());
-        material.setGrupo(dto.getGrupo().trim());
-        material.setSubgrupo(dto.getSubgrupo());
+        material.setGrupo(grupo);
+        material.setSubgrupo(subgrupo);
         material.setCategoria(dto.getCategoria());
         material.setStatus(dto.getStatus());
         material.setQuantidadeMinima(dto.getQuantidadeMinima());
