@@ -63,8 +63,31 @@ Gerenciamento do catálogo físico hierárquico (espaços, galpões, salas, arm�
 | `GET` | `/api/v1/localizacoes/codigo/{codigo}` | Busca os detalhes de uma localização por código | `200 OK` |
 | `GET` | `/api/v1/localizacoes/{id}/filhas` | Lista as localizações filhas diretas | `200 OK` |
 | `GET` | `/api/v1/localizacoes/{id}/caminho` | Retorna o caminho hierárquico ordenado da raiz até o nó | `200 OK` |
+| `GET` | `/api/v1/localizacoes/{id}/impedimentos-exclusao` | Consulta impedimentos para excluir a localização | `200 OK` |
 | `PUT` | `/api/v1/localizacoes/{id}` | Atualiza dados cadastrais e vínculo de pai da localização | `200 OK` |
 | `DELETE` | `/api/v1/localizacoes/{id}` | Remove uma localização pelo seu identificador | `204 No Content` |
+
+### Consultar impedimentos de exclusão
+
+`GET /api/v1/localizacoes/{id}/impedimentos-exclusao` retorna HTTP `200` para uma localização existente. Exemplo com os dois impedimentos:
+
+```json
+{
+  "success": true,
+  "message": "Operação realizada com sucesso",
+  "data": {
+    "podeExcluir": false,
+    "motivos": ["POSSUI_LOCALIZACOES_FILHAS", "POSSUI_MATERIAIS_ASSOCIADOS"]
+  },
+  "timestamp": "2026-11-26T19:00:00"
+}
+```
+
+- `POSSUI_LOCALIZACOES_FILHAS` indica que há uma localização filha direta.
+- `POSSUI_MATERIAIS_ASSOCIADOS` indica que há um material vinculado, inclusive com saldo zero.
+- Quando não há vínculos, `podeExcluir` é `true` e `motivos` é `[]`. Um ID inexistente retorna HTTP `404` no formato de erro da API.
+
+O frontend pode desabilitar a ação quando `podeExcluir` for `false` e apresentar os motivos retornados. A consulta é somente leitura e reflete os vínculos observados durante a requisição. O `DELETE` verifica novamente os vínculos e pode retornar HTTP `409` se houver impedimento.
 
 ---
 
