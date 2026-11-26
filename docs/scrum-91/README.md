@@ -62,5 +62,40 @@ Compare as saídas. O ID do contêiner deve mudar e o histórico deve continuar 
 ## Verificação manual do hotfix
 
 - **PostgreSQL 14 local:** o Hikari abriu a conexão JDBC em uma instância isolada, o Flyway aplicou V1 a V4 em banco vazio, o Hibernate inicializou com validação do esquema e `GET /api/v1/status` retornou HTTP 200 com `environment: dev`.
-- **H2:** o perfil `dev` sem `.env` iniciou com H2 em memória, aplicou as quatro migrações e inicializou o JPA.
-- **PostgreSQL 17 via Compose:** execução pendente. A máquina usada para a revisão não tem um Docker Engine com Compose acessível.
+- **H2:** na validação de 26/11/2026, o perfil `dev` sem `.env` iniciou com H2 2.4.240 em memória, aplicou V1 a V4 e inicializou o JPA. `GET /api/v1/status` retornou HTTP 200 com `status: UP` e `environment: dev`.
+
+### PostgreSQL 17 via Compose em 26/11/2026
+
+O roteiro foi executado no projeto Compose isolado `organizows-scrum91-air`, com volume novo, porta 5433 e credenciais de validação fornecidas pelo ambiente. A aplicação foi iniciada com o perfil `dev` na porta 18091.
+
+| Comando ou verificação | Resultado observado |
+| --- | --- |
+| `docker compose @composeArgs config --quiet` | Configuração válida |
+| `docker compose @composeArgs up -d --wait` | Contêiner saudável |
+| `docker compose @composeArgs exec -T postgres postgres --version` | `postgres (PostgreSQL) 17.12 (Debian 17.12-1.pgdg13+1)` |
+| Inicialização do backend pelo Maven Wrapper | Hikari abriu uma conexão JDBC com PostgreSQL 17.12. Flyway encontrou o esquema vazio e aplicou V1 a V4. Hibernate inicializou o JPA com `spring.jpa.hibernate.ddl-auto=validate`. |
+| `curl.exe -i http://127.0.0.1:18091/api/v1/status` | HTTP 200, `status: UP` e `environment: dev` |
+
+Depois de parar o backend, o histórico foi consultado antes e depois de `docker compose @composeArgs stop postgres` e `docker compose @composeArgs up -d --wait --force-recreate postgres`. O contêiner recriado ficou saudável e montou o mesmo volume `organizows-scrum91-air_postgres-data`.
+
+Consulta executada nos dois contêineres:
+
+```sql
+SELECT version, description, success, installed_on
+FROM flyway_schema_history
+ORDER BY installed_rank;
+```
+
+```text
+Antes (ID abreviado c399a0a58293):
+1|create table localizacao|t|2026-11-26 19:37:28.980955
+2|create table material|t|2026-11-26 19:37:29.042757
+3|add quantidade material|t|2026-11-26 19:37:29.088886
+4|add material technical attributes|t|2026-11-26 19:37:29.125574
+
+Depois (ID abreviado a97b48a28b9e):
+1|create table localizacao|t|2026-11-26 19:37:28.980955
+2|create table material|t|2026-11-26 19:37:29.042757
+3|add quantidade material|t|2026-11-26 19:37:29.088886
+4|add material technical attributes|t|2026-11-26 19:37:29.125574
+```
