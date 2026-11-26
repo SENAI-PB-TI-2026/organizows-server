@@ -8,6 +8,8 @@ Este repositório contém a API backend responsável pelos serviços e regras de
 
 ## Documentação da API (OpenAPI / Swagger)
 
+O índice das consultas HTTP do catálogo, com rotas existentes, parâmetros, campos de resposta, exemplos e pendências, está em [docs/consultas-publicas-catalogo.md](docs/consultas-publicas-catalogo.md).
+
 A especificação OpenAPI 3.0 e a interface Swagger UI estão integradas à aplicação para orientar a integração dos módulos das próximas sprints sem necessidade de interfaces visuais no backend:
 
 - **Swagger UI (Documentação Interativa):**
