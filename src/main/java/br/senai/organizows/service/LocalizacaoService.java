@@ -1,5 +1,6 @@
 package br.senai.organizows.service;
 
+import br.senai.organizows.dto.localizacao.ImpedimentosExclusaoResponseDTO;
 import br.senai.organizows.dto.localizacao.LocalizacaoRequestDTO;
 import br.senai.organizows.dto.localizacao.LocalizacaoResponseDTO;
 import br.senai.organizows.exception.CodigoLocalizacaoDuplicadoException;
@@ -14,6 +15,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -112,17 +114,42 @@ public class LocalizacaoService {
         return LocalizacaoResponseDTO.fromEntity(salva);
     }
 
-    public void excluir(Long id) {
-        if (!localizacaoRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Localização não encontrada com ID: " + id);
+    @Transactional(readOnly = true)
+    public ImpedimentosExclusaoResponseDTO consultarImpedimentosExclusao(Long id) {
+        validarExistencia(id);
+        List<String> motivos = new ArrayList<>();
+        if (possuiFilhas(id)) {
+            motivos.add("POSSUI_LOCALIZACOES_FILHAS");
         }
-        if (localizacaoRepository.existsByLocalPaiId(id)) {
+        if (possuiMateriais(id)) {
+            motivos.add("POSSUI_MATERIAIS_ASSOCIADOS");
+        }
+        return new ImpedimentosExclusaoResponseDTO(motivos.isEmpty(), motivos);
+    }
+
+    public void excluir(Long id) {
+        validarExistencia(id);
+        if (possuiFilhas(id)) {
             throw new br.senai.organizows.exception.LocalizacaoComFilhosException("Localização possui filhas e não pode ser excluída");
         }
-        if (materialRepository.existsByLocalizacaoId(id)) {
+        if (possuiMateriais(id)) {
             throw new LocalizacaoComMateriaisException("Localização possui materiais associados e não pode ser excluída");
         }
         localizacaoRepository.deleteById(id);
+    }
+
+    private void validarExistencia(Long id) {
+        if (!localizacaoRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Localização não encontrada com ID: " + id);
+        }
+    }
+
+    private boolean possuiFilhas(Long id) {
+        return localizacaoRepository.existsByLocalPaiId(id);
+    }
+
+    private boolean possuiMateriais(Long id) {
+        return materialRepository.existsByLocalizacaoId(id);
     }
 
     @Transactional(readOnly = true)
