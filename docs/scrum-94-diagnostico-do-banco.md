@@ -20,20 +20,21 @@ Inicie o backend com `mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"`
 
 ## Verificação com PostgreSQL e DEBUG
 
-A rodada local foi feita sobre a `develop` no commit `1ff1646`, combinando em uma cópia de validação as dependências do PR #19 e o diagnóstico do PR #21. O PostgreSQL 14 rodou em uma instância isolada. A repetição na branch atualizada depois do merge do #19 permanece pendente.
+A primeira rodada usou PostgreSQL 14 isolado e uma cópia da `develop` no commit `1ff1646`. Em 26/11/2026, repetimos a validação em uma cópia isolada da `origin/develop` no commit `d5341dd`, com as dependências JDBC/Flyway do [PR #19](https://github.com/SENAI-PB-TI-2026/organizows-server/pull/19) e o diagnóstico do [PR #21](https://github.com/SENAI-PB-TI-2026/organizows-server/pull/21). O PostgreSQL 17.12 subiu saudável com o Compose da SCRUM-91, em um volume novo na porta local 5434. Na data da rodada, a integração do #19 à `develop` ainda estava pendente.
 
 ```powershell
 .\mvnw.cmd -B -DskipTests package
 java -jar target/organizows-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev --spring.main.web-application-type=none --debug --logging.level.org.springframework.boot.diagnostics.LoggingFailureAnalysisReporter=DEBUG --logging.level.com.zaxxer.hikari=DEBUG
 ```
 
-Repita o comando com uma senha incorreta em `DEV_DB_PASSWORD` e com uma porta sem servidor em `DEV_DB_URL`, um cenário por vez. Para reproduzir a URL vazia, acrescente `--spring.datasource.url=`. Para verificar o fallback, remova do ambiente de teste o `.env` e as variáveis de conexão. Para conferir o isolamento, use `--spring.profiles.active=h2` com `DEV_DB_URL` inválida.
+Foram usadas as quatro variáveis `DEV_DB_*` com o PostgreSQL ativo. Para testar autenticação, foi definida uma senha fictícia incorreta em `DEV_DB_PASSWORD`. Para testar indisponibilidade, o contêiner de validação foi parado e a URL recebeu um parâmetro `password` com outro marcador fictício. Para reproduzir a URL vazia, acrescente `--spring.datasource.url=`. Para verificar o fallback, execute sem `.env` e sem as variáveis de conexão. Para conferir o isolamento, use `--spring.profiles.active=h2` com `DEV_DB_URL` inválida.
 
-- **PostgreSQL válido:** o Flyway aplicou V1 a V4 em banco vazio, o Hibernate inicializou com validação do esquema e a aplicação iniciou.
-- **Diagnóstico do projeto, senha incorreta:** “O banco de desenvolvimento recusou a autenticação.” A orientação indica `DEV_DB_USER` e `DEV_DB_PASSWORD`.
-- **Diagnóstico do projeto, servidor indisponível:** “Falha ao estabelecer conexão com o banco de desenvolvimento.” A orientação indica revisar host, porta e banco em `DEV_DB_URL`.
+- **PostgreSQL válido:** o Hikari abriu uma conexão JDBC, o Flyway aplicou V1 a V4 em banco vazio, o Hibernate inicializou com validação do esquema e a aplicação encerrou com código 0 no modo sem servidor web.
+- **Diagnóstico do projeto, senha incorreta:** código 1 e mensagem “O banco de desenvolvimento recusou a autenticação.” A orientação foi “Confira DEV_DB_USER e DEV_DB_PASSWORD no ambiente e no .env da raiz.” Em DEBUG, a causa exibida foi “Falha de autenticação JDBC no perfil dev.”
+- **Diagnóstico do projeto, servidor indisponível:** código 1 e mensagem “Falha ao estabelecer conexão com o banco de desenvolvimento.” A orientação foi “Confira se o banco está ativo e se host, porta e banco em DEV_DB_URL estão corretos.” Em DEBUG, a causa exibida foi “Falha de conexão JDBC no perfil dev.”
 - **Diagnóstico do projeto, URL vazia:** “A URL JDBC do perfil dev está vazia.” A aplicação encerrou com código 1.
-- **Diagnósticos nativos:** o Spring Boot informou `Cannot load driver class: exemplo.Driver` e o Hikari informou `claims to not accept jdbcUrl` no cenário de URL incompatível.
-- **H2:** o fallback `dev` iniciou em `organizows_dev` e o perfil `h2` isolado iniciou em `organizows`, mesmo com `DEV_DB_URL` inválida.
+- **Diagnósticos nativos:** o Spring Boot informou `Cannot load driver class: exemplo.Driver` e o Hikari informou `Driver org.h2.Driver claims to not accept jdbcUrl` no cenário de URL incompatível. Ambos encerraram com código 1.
+- **H2:** o fallback `dev` iniciou em `organizows_dev` sem senha configurada. O perfil `h2` iniciou em `organizows` mesmo com `DEV_DB_URL` apontando para o PostgreSQL parado. Ambos aplicaram V1 a V4 e encerraram com código 0.
+- **Precedência:** com URL, driver e usuário diferentes no `.env` e no ambiente externo, a aplicação iniciou no H2 `scrum94_externo` definido pelo ambiente.
 
-As falhas de PostgreSQL foram executadas com marcadores fictícios na senha e, separadamente, em um parâmetro de URL. Os marcadores não apareceram na saída capturada. O diagnóstico próprio usa uma causa com mensagem fixa para o relatório em DEBUG. Os diagnósticos nativos seguem habilitados.
+A saída completa capturada nos cenários não continha a senha local gerada nem os marcadores fictícios de senha e URL. O diagnóstico próprio usa uma causa com mensagem fixa para o relatório em DEBUG. Os diagnósticos nativos seguem habilitados. Mantenha a senha em `DEV_DB_PASSWORD` para uso normal.
