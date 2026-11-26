@@ -74,6 +74,28 @@ No cadastro e na alteração de classificação, o grupo deve corresponder à ca
 
 Materiais cadastrados antes dessa validação mantêm a classificação original quando são editados sem mudar categoria, grupo ou subgrupo. Para regularizar um cadastro, consulte-o com `GET /api/v1/materiais/{id}` e envie os campos cadastrais no `PUT /api/v1/materiais/{id}` com uma combinação compatível. Os grupos e subgrupos aceitos estão em `CategoriaMaterial.java`. A regularização é feita por material, sem alteração automática dos dados anteriores.
 
+### Consultar classificações permitidas
+
+`GET /api/v1/materiais/classificacoes` retorna HTTP `200` com todas as categorias, inclusive quando ainda não há materiais cadastrados. A consulta usa a mesma configuração do cadastro e da edição e não altera registros.
+
+Exemplo de resposta com uma categoria da lista.
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "categoria": "FERRAMENTA",
+      "grupo": "Ferramentas",
+      "subgrupos": ["Manuais", "Elétricas"]
+    }
+  ],
+  "timestamp": "2026-11-25T20:00:00"
+}
+```
+
+Use `categoria` como o identificador estável no formulário. Ao selecionar uma categoria, preencha `grupo` com o valor do item e ofereça somente os valores de `subgrupos`. Envie esses valores com os mesmos nomes de campo no cadastro ou na edição. O subgrupo é opcional e pode ser enviado como `null`.
+
 ## Padrão de Respostas e Convenções (Contrato de Integração)
 
 Todas as equipes devem seguir as convenções abaixo ao implementar novos controllers e serviços nas próximas sprints:

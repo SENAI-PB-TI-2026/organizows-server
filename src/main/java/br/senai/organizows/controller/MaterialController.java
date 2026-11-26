@@ -1,6 +1,7 @@
 package br.senai.organizows.controller;
 
 import br.senai.organizows.dto.AjusteSaldoRequestDTO;
+import br.senai.organizows.dto.ClassificacaoMaterialResponseDTO;
 import br.senai.organizows.dto.MaterialRequestDTO;
 import br.senai.organizows.dto.MaterialResponseDTO;
 import br.senai.organizows.dto.MaterialUpdateRequestDTO;
@@ -36,6 +37,11 @@ public class MaterialController {
                 ? materialService.listarTodos()
                 : materialService.listarPorGrupo(grupo);
         return ResponseEntity.ok(ApiResponse.success(materiais));
+    }
+
+    @GetMapping("/classificacoes")
+    public ResponseEntity<ApiResponse<List<ClassificacaoMaterialResponseDTO>>> listarClassificacoes() {
+        return ResponseEntity.ok(ApiResponse.success(materialService.listarClassificacoes()));
     }
 
     @GetMapping("/{id}")
