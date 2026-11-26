@@ -2,11 +2,11 @@
 
 [Cartão no Jira](https://team-senai.atlassian.net/browse/SCRUM-91)
 
-Proposta para revisão técnica antes da aplicação. A demonstração em execução está prevista para depois da orientação docente na oficina de 04/12/2026.
+Roteiro para validar o PostgreSQL 17 com Docker Compose, conteúdo ministrado em 19/11/2026.
 
 ## Pré-requisitos
 
-- Java compatível com o projeto e um PostgreSQL local. Para experimentar a proposta de contêiner após a orientação docente, use Docker com o plugin Compose v2.
+- Java compatível com o projeto e Docker com o plugin Compose v2. Uma instalação local de PostgreSQL também pode ser utilizada para desenvolvimento.
 - Porta local 5433 disponível. O Compose publica nela a porta 5432 do contêiner, somente em `127.0.0.1`. Altere `POSTGRES_PORT` no arquivo local se necessário.
 - O backend usa o driver JDBC PostgreSQL e o módulo Flyway para PostgreSQL, com versões gerenciadas pelo Spring Boot. [Suporte PostgreSQL no Flyway](https://documentation.red-gate.com/flyway/reference/database-driver-reference/postgresql-database)
 
@@ -25,15 +25,17 @@ O Spring Boot lê as variáveis abaixo do `.env` na **raiz do repositório**, ou
 
 Para uma instalação local, ajuste host, porta e nome do banco na URL JDBC. Comece com um banco vazio para verificar a aplicação das migrações.
 
-## Roteiro para depois da revisão
+## Roteiro de validação com Docker Compose
 
 Na raiz do repositório, copie o exemplo e preencha a senha local no arquivo criado.
 
 ```powershell
 Copy-Item docs/scrum-91/.env.example docs/scrum-91/.env
-docker compose --env-file docs/scrum-91/.env -f docs/scrum-91/compose.yaml config --quiet
-docker compose --env-file docs/scrum-91/.env -f docs/scrum-91/compose.yaml up -d
-docker compose --env-file docs/scrum-91/.env -f docs/scrum-91/compose.yaml ps
+$composeArgs = @('--env-file', 'docs/scrum-91/.env', '-f', 'docs/scrum-91/compose.yaml', '-p', 'organizows-scrum91-validacao')
+docker compose @composeArgs config --quiet
+docker compose @composeArgs up -d --wait
+docker compose @composeArgs ps
+docker compose @composeArgs exec -T postgres postgres --version
 ```
 
 Com o banco disponível, preencha as quatro variáveis `DEV_DB_*` no `.env` da raiz ou no ambiente externo e inicie o backend:
@@ -42,8 +44,23 @@ Com o banco disponível, preencha as quatro variáveis `DEV_DB_*` no `.env` da r
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"
 ```
 
-Na primeira execução com um volume novo, registre a conexão JDBC, o resultado das migrações Flyway em base vazia e a inicialização do Hibernate. Consulte `GET /api/v1/status` para confirmar que o serviço está no perfil `dev`.
+Na primeira execução com um volume novo, registre a conexão JDBC, o resultado das migrações Flyway em base vazia e a inicialização do Hibernate. Consulte `curl.exe -i http://localhost:8080/api/v1/status` em outro terminal.
+
+Para verificar o volume, pare o backend, consulte o histórico do Flyway, recrie apenas o contêiner e repita a consulta antes de reiniciar o backend. Use o nome e o usuário configurados no `.env` do Compose se você alterou os exemplos:
+
+```powershell
+docker compose @composeArgs exec -T postgres psql -U organizows_dev -d organizows_dev -tAc "SELECT version FROM flyway_schema_history WHERE success ORDER BY installed_rank"
+docker compose @composeArgs ps -q postgres
+docker compose @composeArgs stop postgres
+docker compose @composeArgs up -d --wait --force-recreate postgres
+docker compose @composeArgs ps -q postgres
+docker compose @composeArgs exec -T postgres psql -U organizows_dev -d organizows_dev -tAc "SELECT version FROM flyway_schema_history WHERE success ORDER BY installed_rank"
+```
+
+Compare as saídas. O ID do contêiner deve mudar e o histórico deve continuar com as mesmas quatro versões. Registre os resultados sem incluir credenciais.
 
 ## Verificação manual do hotfix
 
-Em uma cópia da `develop` com as dependências deste hotfix, executei o perfil `dev` com PostgreSQL 14 local em uma instância isolada e um banco vazio. O Hikari abriu uma conexão JDBC, o Flyway aplicou V1 a V4, o Hibernate validou o esquema e `GET /api/v1/status` retornou HTTP 200 com `environment: dev`. Também iniciei o perfil `dev` sem `.env` e confirmei o fallback H2, as quatro migrações e a inicialização JPA. A demonstração em Docker Compose aguarda a orientação docente.
+- **PostgreSQL 14 local:** o Hikari abriu a conexão JDBC em uma instância isolada, o Flyway aplicou V1 a V4 em banco vazio, o Hibernate inicializou com validação do esquema e `GET /api/v1/status` retornou HTTP 200 com `environment: dev`.
+- **H2:** o perfil `dev` sem `.env` iniciou com H2 em memória, aplicou as quatro migrações e inicializou o JPA.
+- **PostgreSQL 17 via Compose:** execução pendente. A máquina usada para a revisão não tem um Docker Engine com Compose acessível.
