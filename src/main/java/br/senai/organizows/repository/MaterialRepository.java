@@ -36,4 +36,6 @@ public interface MaterialRepository extends JpaRepository<Material, Long> {
     List<Material> findByNomeContainingIgnoreCase(String nome);
 
     List<Material> findByLocalizacaoId(Long localizacaoId);
+
+    boolean existsByLocalizacaoId(Long localizacaoId);
 }

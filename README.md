@@ -68,6 +68,12 @@ Gerenciamento do catálogo físico hierárquico (espaços, galpões, salas, arm�
 
 ---
 
+## Classificação de materiais
+
+No cadastro e na alteração de classificação, o grupo deve corresponder à categoria. Por exemplo, a categoria `FERRAMENTA` usa o grupo `Ferramentas` e pode usar o subgrupo `Manuais`. O subgrupo é opcional. Consulte os materiais de um grupo com `GET /api/v1/materiais?grupo=Ferramentas`.
+
+Materiais cadastrados antes dessa validação mantêm a classificação original quando são editados sem mudar categoria, grupo ou subgrupo. Para regularizar um cadastro, consulte-o com `GET /api/v1/materiais/{id}` e envie os campos cadastrais no `PUT /api/v1/materiais/{id}` com uma combinação compatível. Os grupos e subgrupos aceitos estão em `CategoriaMaterial.java`. A regularização é feita por material, sem alteração automática dos dados anteriores.
+
 ## Padrão de Respostas e Convenções (Contrato de Integração)
 
 Todas as equipes devem seguir as convenções abaixo ao implementar novos controllers e serviços nas próximas sprints:
@@ -136,8 +142,27 @@ Tratamento centralizado pelo `GlobalExceptionHandler`:
 ## Perfis de Ambiente e Segurança de Credenciais
 
 - **Perfil Padrão (`h2`):** Configurado como perfil default via `spring.profiles.default=h2`. Permite que novos desenvolvedores clonem o repositório e iniciem imediatamente a aplicação e testes com banco em memória H2 e migrações Flyway aplicadas automaticamente sem dependências externas.
+- **Perfil de desenvolvimento (`dev`):** Carrega o arquivo local `.env`, quando presente, e usa H2 em memória por padrão. O Flyway aplica as migrações e o Hibernate valida o esquema.
 - **Perfis de Homologação/Produção:** O ambiente externo pode definir `SPRING_PROFILES_ACTIVE=prod` e injetar credenciais e chaves via variáveis de ambiente (`SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`).
 - **Segurança de Segredos:** Nenhuma senha, token ou chave de API deve ser versionada no repositório. O arquivo `.gitignore` já bloqueia `.env`, arquivos de credenciais e certificados.
+
+Na raiz do projeto, copie o exemplo para `.env` e inicie o perfil `dev`:
+
+```powershell
+Copy-Item .env.example .env
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"
+```
+
+No Linux ou macOS, use `cp .env.example .env` e `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev`.
+
+| Variável | Exemplo local |
+| --- | --- |
+| `DEV_DB_URL` | `jdbc:h2:mem:organizows_dev;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE` |
+| `DEV_DB_DRIVER` | `org.h2.Driver` |
+| `DEV_DB_USER` | `sa` |
+| `DEV_DB_PASSWORD` | Vazia para o H2 local |
+
+As variáveis de ambiente do processo podem sobrescrever os valores do arquivo. Para confirmar a inicialização, verifique no log o perfil `dev`, a conexão com `organizows_dev`, a aplicação das migrações e a mensagem de início da aplicação.
 
 ---
 

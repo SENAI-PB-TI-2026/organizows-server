@@ -4,9 +4,11 @@ import br.senai.organizows.dto.localizacao.LocalizacaoRequestDTO;
 import br.senai.organizows.dto.localizacao.LocalizacaoResponseDTO;
 import br.senai.organizows.exception.CodigoLocalizacaoDuplicadoException;
 import br.senai.organizows.exception.HierarquiaInvalidaException;
+import br.senai.organizows.exception.LocalizacaoComMateriaisException;
 import br.senai.organizows.exception.ResourceNotFoundException;
 import br.senai.organizows.model.Localizacao;
 import br.senai.organizows.repository.LocalizacaoRepository;
+import br.senai.organizows.repository.MaterialRepository;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -22,9 +24,11 @@ import java.util.Set;
 public class LocalizacaoService {
 
     private final LocalizacaoRepository localizacaoRepository;
+    private final MaterialRepository materialRepository;
 
-    public LocalizacaoService(LocalizacaoRepository localizacaoRepository) {
+    public LocalizacaoService(LocalizacaoRepository localizacaoRepository, MaterialRepository materialRepository) {
         this.localizacaoRepository = localizacaoRepository;
+        this.materialRepository = materialRepository;
     }
 
     public Localizacao salvar(Localizacao localizacao) {
@@ -114,6 +118,9 @@ public class LocalizacaoService {
         }
         if (localizacaoRepository.existsByLocalPaiId(id)) {
             throw new br.senai.organizows.exception.LocalizacaoComFilhosException("Localização possui filhas e não pode ser excluída");
+        }
+        if (materialRepository.existsByLocalizacaoId(id)) {
+            throw new LocalizacaoComMateriaisException("Localização possui materiais associados e não pode ser excluída");
         }
         localizacaoRepository.deleteById(id);
     }
