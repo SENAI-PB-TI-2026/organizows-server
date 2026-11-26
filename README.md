@@ -173,20 +173,11 @@ Tratamento centralizado pelo `GlobalExceptionHandler`:
 ./mvnw spring-boot:run
 ```
 
-### Executar Testes
-```bash
-# Windows
-.\mvnw.cmd test
-
-# Linux / macOS
-./mvnw test
-```
-
 ---
 
 ## Perfis de Ambiente e Segurança de Credenciais
 
-- **Perfil Padrão (`h2`):** Configurado como perfil default via `spring.profiles.default=h2`. Permite que novos desenvolvedores clonem o repositório e iniciem imediatamente a aplicação e testes com banco em memória H2 e migrações Flyway aplicadas automaticamente sem dependências externas.
+- **Perfil Padrão (`h2`):** Configurado como perfil default via `spring.profiles.default=h2`. Permite que novos desenvolvedores clonem o repositório e iniciem imediatamente a aplicação com banco em memória H2 e migrações Flyway aplicadas automaticamente sem dependências externas.
 - **Perfil de desenvolvimento (`dev`):** Carrega o arquivo local `.env`, quando presente, e usa H2 em memória por padrão. O Flyway aplica as migrações e o Hibernate valida o esquema.
 - **Perfis de Homologação/Produção:** O ambiente externo pode definir `SPRING_PROFILES_ACTIVE=prod` e injetar credenciais e chaves via variáveis de ambiente (`SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`).
 - **Segurança de Segredos:** Nenhuma senha, token ou chave de API deve ser versionada no repositório. O arquivo `.gitignore` já bloqueia `.env`, arquivos de credenciais e certificados.
@@ -217,7 +208,7 @@ Para manter a rastreabilidade entre tarefas, commits e entregas avaliadas, todos
 
 * **Conventional Commits com Chave Scrum**: todo commit deve conter a chave do ticket, e.g. `feat(escopo): [SCRUM-N] descricao`.
 * **Revisão Cruzada Obrigatória**: todo merge em `develop` exige Pull Request revisado e aprovado por outro integrante.
-* **Evidências de Teste**: todo Pull Request deve incluir link da tarefa, descrição e evidência básica de testes.
+* **Evidências de Teste**: todo Pull Request deve incluir link da tarefa, descrição e evidência da verificação manual.
 
 Consulte o [CONTRIBUTING.md](CONTRIBUTING.md) para detalhes completos e exemplos.
 
