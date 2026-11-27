@@ -8,6 +8,8 @@ Este repositório contém a API backend responsável pelos serviços e regras de
 
 ## Documentação da API (OpenAPI / Swagger)
 
+O índice das consultas HTTP do catálogo, com rotas existentes, parâmetros, campos de resposta, exemplos e pendências, está em [docs/consultas-publicas-catalogo.md](docs/consultas-publicas-catalogo.md).
+
 A especificação OpenAPI 3.0 e a interface Swagger UI estão integradas à aplicação para orientar a integração dos módulos das próximas sprints sem necessidade de interfaces visuais no backend:
 
 - **Swagger UI (Documentação Interativa):**
@@ -63,8 +65,31 @@ Gerenciamento do catálogo físico hierárquico (espaços, galpões, salas, arm�
 | `GET` | `/api/v1/localizacoes/codigo/{codigo}` | Busca os detalhes de uma localização por código | `200 OK` |
 | `GET` | `/api/v1/localizacoes/{id}/filhas` | Lista as localizações filhas diretas | `200 OK` |
 | `GET` | `/api/v1/localizacoes/{id}/caminho` | Retorna o caminho hierárquico ordenado da raiz até o nó | `200 OK` |
+| `GET` | `/api/v1/localizacoes/{id}/impedimentos-exclusao` | Consulta impedimentos para excluir a localização | `200 OK` |
 | `PUT` | `/api/v1/localizacoes/{id}` | Atualiza dados cadastrais e vínculo de pai da localização | `200 OK` |
 | `DELETE` | `/api/v1/localizacoes/{id}` | Remove uma localização pelo seu identificador | `204 No Content` |
+
+### Consultar impedimentos de exclusão
+
+`GET /api/v1/localizacoes/{id}/impedimentos-exclusao` retorna HTTP `200` para uma localização existente. Exemplo com os dois impedimentos:
+
+```json
+{
+  "success": true,
+  "message": "Operação realizada com sucesso",
+  "data": {
+    "podeExcluir": false,
+    "motivos": ["POSSUI_LOCALIZACOES_FILHAS", "POSSUI_MATERIAIS_ASSOCIADOS"]
+  },
+  "timestamp": "2026-11-26T19:00:00"
+}
+```
+
+- `POSSUI_LOCALIZACOES_FILHAS` indica que há uma localização filha direta.
+- `POSSUI_MATERIAIS_ASSOCIADOS` indica que há um material vinculado, inclusive com saldo zero.
+- Quando não há vínculos, `podeExcluir` é `true` e `motivos` é `[]`. Um ID inexistente retorna HTTP `404` no formato de erro da API.
+
+O frontend pode desabilitar a ação quando `podeExcluir` for `false` e apresentar os motivos retornados. A consulta é somente leitura e reflete os vínculos observados durante a requisição. O `DELETE` verifica novamente os vínculos e pode retornar HTTP `409` se houver impedimento.
 
 ---
 
@@ -73,6 +98,28 @@ Gerenciamento do catálogo físico hierárquico (espaços, galpões, salas, arm�
 No cadastro e na alteração de classificação, o grupo deve corresponder à categoria. Por exemplo, a categoria `FERRAMENTA` usa o grupo `Ferramentas` e pode usar o subgrupo `Manuais`. O subgrupo é opcional. Consulte os materiais de um grupo com `GET /api/v1/materiais?grupo=Ferramentas`.
 
 Materiais cadastrados antes dessa validação mantêm a classificação original quando são editados sem mudar categoria, grupo ou subgrupo. Para regularizar um cadastro, consulte-o com `GET /api/v1/materiais/{id}` e envie os campos cadastrais no `PUT /api/v1/materiais/{id}` com uma combinação compatível. Os grupos e subgrupos aceitos estão em `CategoriaMaterial.java`. A regularização é feita por material, sem alteração automática dos dados anteriores.
+
+### Consultar classificações permitidas
+
+`GET /api/v1/materiais/classificacoes` retorna HTTP `200` com todas as categorias, inclusive quando ainda não há materiais cadastrados. A consulta usa a mesma configuração do cadastro e da edição e não altera registros.
+
+Exemplo de resposta com uma categoria da lista.
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "categoria": "FERRAMENTA",
+      "grupo": "Ferramentas",
+      "subgrupos": ["Manuais", "Elétricas"]
+    }
+  ],
+  "timestamp": "2026-11-25T20:00:00"
+}
+```
+
+Use `categoria` como o identificador estável no formulário. Ao selecionar uma categoria, preencha `grupo` com o valor do item e ofereça somente os valores de `subgrupos`. Envie esses valores com os mesmos nomes de campo no cadastro ou na edição. O subgrupo é opcional e pode ser enviado como `null`.
 
 ## Padrão de Respostas e Convenções (Contrato de Integração)
 
@@ -128,20 +175,11 @@ Tratamento centralizado pelo `GlobalExceptionHandler`:
 ./mvnw spring-boot:run
 ```
 
-### Executar Testes
-```bash
-# Windows
-.\mvnw.cmd test
-
-# Linux / macOS
-./mvnw test
-```
-
 ---
 
 ## Perfis de Ambiente e Segurança de Credenciais
 
-- **Perfil Padrão (`h2`):** Configurado como perfil default via `spring.profiles.default=h2`. Permite que novos desenvolvedores clonem o repositório e iniciem imediatamente a aplicação e testes com banco em memória H2 e migrações Flyway aplicadas automaticamente sem dependências externas.
+- **Perfil Padrão (`h2`):** Configurado como perfil default via `spring.profiles.default=h2`. Permite que novos desenvolvedores clonem o repositório e iniciem imediatamente a aplicação com banco em memória H2 e migrações Flyway aplicadas automaticamente sem dependências externas.
 - **Perfil de desenvolvimento (`dev`):** Carrega o arquivo local `.env`, quando presente, e usa H2 em memória por padrão. O Flyway aplica as migrações e o Hibernate valida o esquema.
 - **Perfis de Homologação/Produção:** O ambiente externo pode definir `SPRING_PROFILES_ACTIVE=prod` e injetar credenciais e chaves via variáveis de ambiente (`SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`).
 - **Segurança de Segredos:** Nenhuma senha, token ou chave de API deve ser versionada no repositório. O arquivo `.gitignore` já bloqueia `.env`, arquivos de credenciais e certificados.
@@ -172,7 +210,7 @@ Para manter a rastreabilidade entre tarefas, commits e entregas avaliadas, todos
 
 * **Conventional Commits com Chave Scrum**: todo commit deve conter a chave do ticket, e.g. `feat(escopo): [SCRUM-N] descricao`.
 * **Revisão Cruzada Obrigatória**: todo merge em `develop` exige Pull Request revisado e aprovado por outro integrante.
-* **Evidências de Teste**: todo Pull Request deve incluir link da tarefa, descrição e evidência básica de testes.
+* **Evidências de Teste**: todo Pull Request deve incluir link da tarefa, descrição e evidência da verificação manual.
 
 Consulte o [CONTRIBUTING.md](CONTRIBUTING.md) para detalhes completos e exemplos.
 

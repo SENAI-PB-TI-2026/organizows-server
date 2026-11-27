@@ -1,0 +1,8 @@
+# Infraestrutura de CI e regras pedagogicas sob responsabilidade docente.
+/.github/ @geovanedcs
+/AGENTS.md @geovanedcs
+/CONTRIBUTING.md @geovanedcs
+/.agents/ @geovanedcs
+/.agent/ @geovanedcs
+/.gitleaks.toml @geovanedcs
+/.gitleaksignore @geovanedcs

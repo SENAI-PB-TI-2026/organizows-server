@@ -37,6 +37,11 @@ Na dúvida, aplique as regras gerais deste arquivo e consulte apenas as skills r
 
 Se uma instrução entrar em conflito com o código vigente, explique a divergência antes de editar. Nunca afirme que executou comandos ou verificações que não executou.
 
+## Docker e Docker Compose — conteúdo ministrado
+- Docker Compose foi ministrado em 19/11/2026. Não condicione tarefas que o utilizam à oficina anteriormente prevista para 04/12/2026.
+- Quando o cartão exigir PostgreSQL via Compose (ex.: SCRUM-91), oriente a execução manual, a conexão Spring Boot/JPA, as migrações Flyway, a validação do esquema e a persistência do volume; registre apenas resultados observados, sem versionar credenciais.
+- Para diagnósticos de conexão (ex.: SCRUM-94), Docker Compose é uma opção de validação, não um pré-requisito para cenários que funcionam com H2 ou PostgreSQL local. Não introduza CI/CD ou testes automatizados novos por iniciativa própria.
+
 ## Limites do conteúdo ministrado: autenticação e autorização
 - **Autenticação e autorização ainda não foram ensinadas às equipes.** Não introduza nem configure Spring Security, JWT, OAuth2, tokens, login, senhas, roles, permissões, `@PreAuthorize` ou sistemas de usuários por iniciativa própria.
 - Cartões existentes sobre autenticação/autorização (ex.: SCRUM-14, SCRUM-24, SCRUM-25 e tarefas relacionadas) são **escopo futuro dependente de orientação do professor**. Não marque como concluídos, não implemente atalhos e não altere o Jira automaticamente.

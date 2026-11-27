@@ -1,0 +1,45 @@
+name: CI docente - build e inicializacao
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-startup:
+    name: Build e inicializacao
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Gerar JAR sem testes
+        run: bash mvnw --batch-mode --no-transfer-progress clean package -Dmaven.test.skip=true
+      - name: Inicializar com banco H2 e verificar HTTP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t jars < <(find target -maxdepth 1 -type f -name '*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar')
+          test "${#jars[@]}" -eq 1
+          java -jar "${jars[0]}" --spring.profiles.active=h2 --server.address=127.0.0.1 --server.port=18080 > startup.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          for attempt in {1..60}; do
+            kill -0 "$pid" 2>/dev/null || { tail -n 100 startup.log; exit 1; }
+            if curl --silent --fail --max-time 3 http://127.0.0.1:18080/api/v1/status -o status.json &&
+              jq -e '.success == true and .data.status == "UP"' status.json >/dev/null &&
+              curl --silent --fail --max-time 3 http://127.0.0.1:18080/api/v1/materiais -o /dev/null; then
+              echo "Aplicacao operacional com H2."
+              exit 0
+            fi
+            sleep 2
+          done
+          tail -n 100 startup.log
+          exit 1

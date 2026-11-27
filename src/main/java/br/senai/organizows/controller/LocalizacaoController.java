@@ -1,5 +1,6 @@
 package br.senai.organizows.controller;
 
+import br.senai.organizows.dto.localizacao.ImpedimentosExclusaoResponseDTO;
 import br.senai.organizows.dto.localizacao.LocalizacaoRequestDTO;
 import br.senai.organizows.dto.localizacao.LocalizacaoResponseDTO;
 import br.senai.organizows.dto.response.ApiErrorResponse;
@@ -143,6 +144,18 @@ public class LocalizacaoController {
             @Valid @RequestBody LocalizacaoRequestDTO dto) {
         LocalizacaoResponseDTO response = localizacaoService.atualizar(id, dto);
         return ResponseEntity.ok(ApiResponse.success("Localização atualizada com sucesso", response));
+    }
+
+    @GetMapping("/{id}/impedimentos-exclusao")
+    @Operation(summary = "Consultar impedimentos de exclusão",
+            description = "Indica se a localização tem filhas ou materiais associados no momento da consulta.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Impedimentos consultados"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Localização não encontrada",
+                    content = @Content(schema = @Schema(implementation = ApiErrorResponse.class)))
+    })
+    public ResponseEntity<ApiResponse<ImpedimentosExclusaoResponseDTO>> consultarImpedimentosExclusao(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(localizacaoService.consultarImpedimentosExclusao(id)));
     }
 
     @DeleteMapping("/{id}")

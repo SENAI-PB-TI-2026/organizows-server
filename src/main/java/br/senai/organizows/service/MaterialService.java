@@ -1,6 +1,7 @@
 package br.senai.organizows.service;
 
 import br.senai.organizows.dto.MaterialRequestDTO;
+import br.senai.organizows.dto.ClassificacaoMaterialResponseDTO;
 import br.senai.organizows.dto.MaterialCadastroDTO;
 import br.senai.organizows.dto.MaterialResponseDTO;
 import br.senai.organizows.dto.MaterialUpdateRequestDTO;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Arrays;
 import java.util.Objects;
 
 @Service
@@ -45,6 +47,13 @@ public class MaterialService {
 
     public List<MaterialResponseDTO> listarTodos() {
         return materialRepository.findAll().stream().map(MaterialResponseDTO::new).toList();
+    }
+
+    public List<ClassificacaoMaterialResponseDTO> listarClassificacoes() {
+        return Arrays.stream(CategoriaMaterial.values())
+                .map(categoria -> new ClassificacaoMaterialResponseDTO(
+                        categoria.name(), categoria.getGrupo(), categoria.getSubgrupos()))
+                .toList();
     }
 
     public List<MaterialResponseDTO> listarPorGrupo(String grupo) {
