@@ -1,0 +1,83 @@
+name: CI docente - Migration Quality
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migration-quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  history:
+    name: Migration Quality - convencao e historico
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      MIGRATION_STRICT: ${{ vars.MIGRATION_STRICT }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verificar convencao e historico Flyway
+        run: python3 .github/scripts/migration_quality.py
+
+  lint:
+    name: Migration Quality - SQLFluff
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Instalar SQLFluff
+        run: |
+          python3 -m venv "$RUNNER_TEMP/migration-lint"
+          "$RUNNER_TEMP/migration-lint/bin/pip" install --disable-pip-version-check sqlfluff==4.5.0
+      - name: Analisar SQL (informativo)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' -t files < <(git ls-files -z -- 'src/main/resources/db/migration' | python3 -c 'import sys; sys.stdout.buffer.write(b"".join(p+b"\0" for p in sys.stdin.buffer.read().split(b"\0") if p.lower().endswith(b".sql") and not __import__("os").path.islink(p)))')
+          if (( ${#files[@]} == 0 )); then
+            echo "Nenhuma migration SQL para lint."
+            exit 0
+          fi
+          # ANSI: os dois projetos ainda usam H2 por padrao. Nao e uma validacao de execucao.
+          "$RUNNER_TEMP/migration-lint/bin/sqlfluff" lint --dialect ansi --templater raw \
+            --rules CP01,LT01,LT02,LT12 --format github-annotation-native \
+            --annotation-level warning --nofail -- "${files[@]}"
+
+  postgres-risk:
+    name: Migration Quality - Squawk (PostgreSQL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - name: Instalar Squawk
+        run: |
+          python3 -m venv "$RUNNER_TEMP/squawk"
+          "$RUNNER_TEMP/squawk/bin/pip" install --disable-pip-version-check squawk-cli==2.70.0
+      - name: Analisar riscos PostgreSQL (informativo)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' -t files < <(git ls-files -z -- 'src/main/resources/db/migration' | python3 -c 'import sys; sys.stdout.buffer.write(b"".join(p+b"\0" for p in sys.stdin.buffer.read().split(b"\0") if p.lower().endswith(b".sql") and not __import__("os").path.islink(p)))')
+          if (( ${#files[@]} == 0 )); then
+            echo "Nenhuma migration SQL para lint."
+            exit 0
+          fi
+          # Squawk analisa PostgreSQL; SQL exclusivo do H2 pode gerar falsos positivos.
+          if ! "$RUNNER_TEMP/squawk/bin/squawk" --assume-in-transaction --reporter gcc "${files[@]}"; then
+            echo "::warning::Squawk encontrou riscos ou erros de analise. Consulte as linhas no log."
+          fi
