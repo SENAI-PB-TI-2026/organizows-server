@@ -40,4 +40,3 @@ build/
 *.key
 *.pem
 credentials.*
-!/docs/scrum-91/.env.example

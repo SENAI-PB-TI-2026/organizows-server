@@ -2,7 +2,7 @@
 
 [Cartão no Jira](https://team-senai.atlassian.net/browse/SCRUM-91)
 
-Roteiro para validar o PostgreSQL 17 com Docker Compose, conteúdo ministrado em 19/11/2026.
+Roteiro para validar o PostgreSQL 17 com Docker Compose, conteúdo ministrado em 19/11/2026. O Compose e o exemplo de configuração agora ficam na raiz do repositório; veja também o [README principal](../../README.md).
 
 ## Pré-requisitos
 
@@ -14,7 +14,7 @@ Roteiro para validar o PostgreSQL 17 com Docker Compose, conteúdo ministrado em
 
 O Compose recebe `POSTGRES_DB` e `POSTGRES_USER` com valores fictícios de desenvolvimento. Preencha `POSTGRES_PASSWORD` apenas no `.env` local, ignorado pelo Git. O volume nomeado `postgres-data` mantém os dados entre reinicializações. As credenciais do Compose inicializam o banco quando o volume está vazio. [Variáveis no Docker Compose](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation)
 
-O Spring Boot lê as variáveis abaixo do `.env` na **raiz do repositório**, ou do ambiente externo, que tem precedência. Sem essas definições, o perfil `dev` usa H2 em memória. O arquivo `docs/scrum-91/.env` é exclusivo do Compose. Mantenha as senhas nos arquivos locais ignorados pelo Git ou no ambiente da IDE.
+O Spring Boot lê as variáveis abaixo do `.env` na **raiz do repositório**, ou do ambiente externo, que tem precedência. Sem essas definições, o perfil `dev` usa H2 em memória. O Compose e o backend compartilham o mesmo `.env` da raiz. Preencha `POSTGRES_PASSWORD` e `DEV_DB_PASSWORD` com a mesma senha local. Mantenha as senhas nos arquivos locais ignorados pelo Git ou no ambiente da IDE.
 
 | Variável do perfil `dev` | Valor de desenvolvimento |
 | --- | --- |
@@ -27,18 +27,19 @@ Para uma instalação local, ajuste host, porta e nome do banco na URL JDBC. Com
 
 ## Roteiro de validação com Docker Compose
 
-Na raiz do repositório, copie o exemplo e preencha a senha local no arquivo criado.
+Na raiz do repositório, copie o exemplo somente se ainda não houver um `.env`. Edite o arquivo para preencher as duas variáveis de senha com o mesmo valor local. Se já houver um `.env`, complete os campos necessários em vez de sobrescrevê-lo. O nome explícito do projeto permite isolar a validação do ambiente diário.
 
 ```powershell
-Copy-Item docs/scrum-91/.env.example docs/scrum-91/.env
-$composeArgs = @('--env-file', 'docs/scrum-91/.env', '-f', 'docs/scrum-91/compose.yaml', '-p', 'organizows-scrum91-validacao')
+Copy-Item .env.example .env # somente se .env ainda não existir
+# Edite .env antes de continuar.
+$composeArgs = @('-p', 'organizows-scrum91-validacao')
 docker compose @composeArgs config --quiet
 docker compose @composeArgs up -d --wait
 docker compose @composeArgs ps
 docker compose @composeArgs exec -T postgres postgres --version
 ```
 
-Com o banco disponível, preencha as quatro variáveis `DEV_DB_*` no `.env` da raiz ou no ambiente externo e inicie o backend:
+Com o banco disponível, confira as quatro variáveis `DEV_DB_*` no `.env` da raiz ou no ambiente externo e inicie o backend:
 
 ```powershell
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"
@@ -66,7 +67,7 @@ Compare as saídas. O ID do contêiner deve mudar e o histórico deve continuar 
 
 ### PostgreSQL 17 via Compose em 26/11/2026
 
-O roteiro foi executado no projeto Compose isolado `organizows-scrum91-air`, com volume novo, porta 5433 e credenciais de validação fornecidas pelo ambiente. A aplicação foi iniciada com o perfil `dev` na porta 18091.
+As evidências abaixo registram a configuração anterior à centralização na raiz. O roteiro foi executado no projeto Compose isolado `organizows-scrum91-air`, com volume novo, porta 5433 e credenciais de validação fornecidas pelo ambiente. A aplicação foi iniciada com o perfil `dev` na porta 18091.
 
 | Comando ou verificação | Resultado observado |
 | --- | --- |

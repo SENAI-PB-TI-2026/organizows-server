@@ -184,23 +184,53 @@ Tratamento centralizado pelo `GlobalExceptionHandler`:
 - **Perfis de Homologação/Produção:** O ambiente externo pode definir `SPRING_PROFILES_ACTIVE=prod` e injetar credenciais e chaves via variáveis de ambiente (`SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`).
 - **Segurança de Segredos:** Nenhuma senha, token ou chave de API deve ser versionada no repositório. O arquivo `.gitignore` já bloqueia `.env`, arquivos de credenciais e certificados.
 
-Na raiz do projeto, copie o exemplo para `.env` e inicie o perfil `dev`:
+### Desenvolvimento com PostgreSQL 17 (Docker Compose)
+
+Pré-requisitos: Java 25, Docker e Docker Compose v2. O Compose na raiz do repositório gerencia somente o banco de dados; o backend continua sendo executado localmente pelo Maven Wrapper.
+
+1. Na raiz do projeto, copie `.env.example` para `.env` (se ainda não existir). Se já tiver um `.env`, complete ou atualize os campos necessários sem perder suas configurações locais.
+2. Edite o `.env`: preencha `POSTGRES_PASSWORD` e `DEV_DB_PASSWORD` com a mesma senha local. Use uma senha adequada ao desenvolvimento, sem aspas ou caracteres que exijam escape em arquivos de propriedades.
+3. Suba o banco e aguarde o healthcheck:
 
 ```powershell
-Copy-Item .env.example .env
+Copy-Item .env.example .env # somente se .env ainda não existir
+# Edite .env antes de continuar.
+docker compose config --quiet
+docker compose up -d --wait
+docker compose ps
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=dev"
 ```
 
-No Linux ou macOS, use `cp .env.example .env` e `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev`.
+No Linux ou macOS, use `cp .env.example .env` (somente se ainda não existir) e `./mvnw spring-boot:run -Dspring-boot.run.profiles=dev`.
 
 | Variável | Exemplo local |
 | --- | --- |
-| `DEV_DB_URL` | `jdbc:h2:mem:organizows_dev;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE` |
-| `DEV_DB_DRIVER` | `org.h2.Driver` |
-| `DEV_DB_USER` | `sa` |
-| `DEV_DB_PASSWORD` | Vazia para o H2 local |
+| `POSTGRES_DB` | `organizows_dev` |
+| `POSTGRES_USER` | `organizows_dev` |
+| `POSTGRES_PASSWORD` | Senha local obrigatória (não versionada) |
+| `POSTGRES_PORT` | `5433` (porta no host) |
+| `DEV_DB_URL` | `jdbc:postgresql://127.0.0.1:5433/organizows_dev` |
+| `DEV_DB_DRIVER` | `org.postgresql.Driver` |
+| `DEV_DB_USER` | Mesmo valor de `POSTGRES_USER` |
+| `DEV_DB_PASSWORD` | Mesmo valor de `POSTGRES_PASSWORD` |
 
-As variáveis de ambiente do processo podem sobrescrever os valores do arquivo. Para confirmar a inicialização, verifique no log o perfil `dev`, a conexão com `organizows_dev`, a aplicação das migrações e a mensagem de início da aplicação.
+O PostgreSQL fica acessível somente em `127.0.0.1`. Se alterar porta, nome do banco ou usuário, ajuste também os campos `DEV_DB_*` correspondentes. Para usar PostgreSQL instalado localmente em vez do Compose, configure os quatro campos `DEV_DB_*` conforme essa instalação.
+
+O Flyway aplica automaticamente as migrações pendentes e o Hibernate valida o esquema. Confirme nos logs o perfil `dev`, a conexão PostgreSQL e a inicialização, e consulte [GET /api/v1/status](http://localhost:8080/api/v1/status).
+
+Para encerrar o banco, pare o backend e execute `docker compose down`. O volume nomeado `postgres-data` preserva os dados. Não use `down -v` se deseja mantê-los. As credenciais `POSTGRES_*` inicializam apenas um volume vazio; mudar a senha no arquivo não altera automaticamente a senha de um usuário existente. Quem já utilizava o Compose da SCRUM-91 com um nome de projeto específico (`-p`) deve manter esse nome nos comandos para reutilizar o mesmo volume e evitar criar outro banco.
+
+### Alternativa sem Docker: H2 em memória
+
+Execute diretamente o perfil padrão `h2` (sem copiar o `.env.example` e sem ativar `dev`):
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+No Linux ou macOS, use `./mvnw spring-boot:run`. O perfil `dev` também mantém o fallback H2 quando não há `.env` com configuração PostgreSQL nem variáveis de conexão externas. O H2 é volátil e seus dados não são preservados ao encerrar a aplicação.
+
+As variáveis de ambiente do processo têm precedência sobre o `.env` no perfil `dev`. Consulte o [roteiro e evidências da SCRUM-91](docs/scrum-91/README.md) para detalhes da validação do banco.
 
 ---
 
