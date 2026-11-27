@@ -25,6 +25,43 @@ Não modifica o Flyway, o POM, as migrations existentes nem exige testes/cobertu
   É uma validação do esquema para começar do zero, não de upgrade com dados
   existentes, nem homologação em PostgreSQL.
 
+## Formatação para próximas migrations
+
+Use palavras-chave SQL em maiúsculas, identificadores no padrão existente,
+uma instrução por bloco e indentação de quatro espaços dentro de expressões.
+O SQLFluff também espera espaço antes do parêntese que lista colunas no exemplo
+abaixo (`material (nome)`).
+
+```sql
+CREATE INDEX idx_material_nome
+ON material (nome);
+
+ALTER TABLE material ADD CONSTRAINT chk_material_status
+CHECK (status IN (
+    'DISPONIVEL',
+    'EM_MANUTENCAO',
+    'OBSOLETO',
+    'INDISPONIVEL'
+));
+```
+
+Os apontamentos `LT01` e `LT02` são de espaçamento e indentação: não indicam
+que os valores ou a regra do `CHECK` estão incorretos. Como o SQLFluff usa o
+dialeto ANSI, o aviso `PRS` em uma migration com sintaxe específica do H2 pode
+ser incompatibilidade do parser, não erro de execução no H2. Confirme a sintaxe
+no banco adotado pelo projeto antes de alterar uma migration.
+
+No Squawk, `constraint-missing-not-valid` alerta que adicionar um `CHECK` a uma
+tabela existente examina os registros antigos e pode bloquear gravações durante
+a verificação. `require-lock-timeout` e `require-statement-timeout` apontam a
+ausência desses limites; `require-concurrent-index-creation` alerta sobre a
+criação normal de índice em PostgreSQL; `prefer-text-field` questiona o uso de
+`VARCHAR` com tamanho. São diagnósticos para avaliar com o banco e o volume de
+dados reais, não instruções para mudar tipos, dados ou constraints apenas para
+silenciar o linter. Antes de propor um novo `CHECK`, consulte os dados com uma
+busca somente de leitura e confira o histórico Flyway do ambiente; não use
+`repair` automático nem reescreva migrations já aplicadas.
+
 ## Regularização inicial e evolução
 
 Durante a regularização do versionamento, realizada separadamente pela equipe,
