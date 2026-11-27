@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.validator.constraints.URL;
 
 @Getter
 @Setter
@@ -30,6 +31,10 @@ public class MaterialUpdateRequestDTO implements MaterialCadastroDTO {
     @NotBlank(message = "A descrição do material é obrigatória")
     @Size(max = 150)
     private String descricao;
+
+    @Size(max = 2048)
+    @URL(regexp = "(?i)https?://[^\\s]+", message = "Informe uma URL de imagem HTTP ou HTTPS válida")
+    private String imagemUrl;
 
     @Size(max = 500)
     private String caracteristicas;

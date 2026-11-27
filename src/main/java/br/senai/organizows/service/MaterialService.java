@@ -136,6 +136,7 @@ public class MaterialService {
         material.setCodigo(dto.getCodigo().trim());
         material.setNome(dto.getNome().trim());
         material.setDescricao(dto.getDescricao() == null ? null : dto.getDescricao().trim());
+        material.setImagemUrl(dto.getImagemUrl());
         material.setCaracteristicas(dto.getCaracteristicas());
         material.setModelo(dto.getModelo());
         material.setEspecificacoesTecnicas(dto.getEspecificacoesTecnicas());

@@ -11,6 +11,8 @@ public interface MaterialCadastroDTO {
 
     String getDescricao();
 
+    String getImagemUrl();
+
     String getCaracteristicas();
 
     String getModelo();
