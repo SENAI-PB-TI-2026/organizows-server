@@ -1,17 +1,21 @@
 package br.senai.organizows.service;
 
+import br.senai.organizows.dto.localizacao.ImpedimentosExclusaoResponseDTO;
 import br.senai.organizows.dto.localizacao.LocalizacaoRequestDTO;
 import br.senai.organizows.dto.localizacao.LocalizacaoResponseDTO;
 import br.senai.organizows.exception.CodigoLocalizacaoDuplicadoException;
 import br.senai.organizows.exception.HierarquiaInvalidaException;
+import br.senai.organizows.exception.LocalizacaoComMateriaisException;
 import br.senai.organizows.exception.ResourceNotFoundException;
 import br.senai.organizows.model.Localizacao;
 import br.senai.organizows.repository.LocalizacaoRepository;
+import br.senai.organizows.repository.MaterialRepository;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -22,9 +26,11 @@ import java.util.Set;
 public class LocalizacaoService {
 
     private final LocalizacaoRepository localizacaoRepository;
+    private final MaterialRepository materialRepository;
 
-    public LocalizacaoService(LocalizacaoRepository localizacaoRepository) {
+    public LocalizacaoService(LocalizacaoRepository localizacaoRepository, MaterialRepository materialRepository) {
         this.localizacaoRepository = localizacaoRepository;
+        this.materialRepository = materialRepository;
     }
 
     public Localizacao salvar(Localizacao localizacao) {
@@ -108,14 +114,42 @@ public class LocalizacaoService {
         return LocalizacaoResponseDTO.fromEntity(salva);
     }
 
+    @Transactional(readOnly = true)
+    public ImpedimentosExclusaoResponseDTO consultarImpedimentosExclusao(Long id) {
+        validarExistencia(id);
+        List<String> motivos = new ArrayList<>();
+        if (possuiFilhas(id)) {
+            motivos.add("POSSUI_LOCALIZACOES_FILHAS");
+        }
+        if (possuiMateriais(id)) {
+            motivos.add("POSSUI_MATERIAIS_ASSOCIADOS");
+        }
+        return new ImpedimentosExclusaoResponseDTO(motivos.isEmpty(), motivos);
+    }
+
     public void excluir(Long id) {
+        validarExistencia(id);
+        if (possuiFilhas(id)) {
+            throw new br.senai.organizows.exception.LocalizacaoComFilhosException("Localização possui filhas e não pode ser excluída");
+        }
+        if (possuiMateriais(id)) {
+            throw new LocalizacaoComMateriaisException("Localização possui materiais associados e não pode ser excluída");
+        }
+        localizacaoRepository.deleteById(id);
+    }
+
+    private void validarExistencia(Long id) {
         if (!localizacaoRepository.existsById(id)) {
             throw new ResourceNotFoundException("Localização não encontrada com ID: " + id);
         }
-        if (localizacaoRepository.existsByLocalPaiId(id)) {
-            throw new br.senai.organizows.exception.LocalizacaoComFilhosException("Localização possui filhas e não pode ser excluída");
-        }
-        localizacaoRepository.deleteById(id);
+    }
+
+    private boolean possuiFilhas(Long id) {
+        return localizacaoRepository.existsByLocalPaiId(id);
+    }
+
+    private boolean possuiMateriais(Long id) {
+        return materialRepository.existsByLocalizacaoId(id);
     }
 
     @Transactional(readOnly = true)
