@@ -12,6 +12,7 @@ Esta página descreve as rotas GET de localização existentes na branch `develo
 | `GET /api/v1/localizacoes/codigo/{codigo}` | Path `codigo` (texto) | Objeto com os campos de localização acima | `200` se encontrado; `404` se não existir. |
 | `GET /api/v1/localizacoes/{id}/filhas` | Path `id` (número inteiro longo) | Lista com os campos de localização acima | `200`; sem filhas, ou para ID sem registros associados, a consulta retorna lista vazia. `400` se o `id` não for numérico. |
 | `GET /api/v1/localizacoes/{id}/caminho` | Path `id` (número inteiro longo) | Lista ordenada da raiz até a localização, com os campos acima | `200` se encontrado; `400` se o `id` não for numérico; `404` se não existir. |
+| `GET /api/v1/localizacoes/{id}/impedimentos-exclusao` | Path `id` (número inteiro longo) | Objeto com `podeExcluir` (booleano) e `motivos` (lista) | `200` se a localização existe; `400` se o `id` não for numérico; `404` se não existir. |
 
 ## Exemplos
 
@@ -90,11 +91,31 @@ Resposta `404 Not Found`:
 }
 ```
 
+### Consultar impedimentos de exclusão
+
+Requisição: `GET /api/v1/localizacoes/12/impedimentos-exclusao`
+
+Resposta `200 OK` (exemplo fictício):
+
+```json
+{
+  "success": true,
+  "message": "Operação realizada com sucesso",
+  "data": {
+    "podeExcluir": false,
+    "motivos": ["POSSUI_MATERIAIS_ASSOCIADOS"]
+  },
+  "timestamp": "2026-11-26T12:00:00"
+}
+```
+
+O endpoint também retorna `404 Not Found` quando a localização não existe. `motivos` pode conter `POSSUI_LOCALIZACOES_FILHAS`, `POSSUI_MATERIAIS_ASSOCIADOS`, ambos ou nenhum, conforme as relações encontradas no momento da consulta.
+
 O corpo de erro apresenta somente dados fictícios e campos do `ApiErrorResponse`; não inclui stack trace, credenciais nem detalhes internos. O `404` vale para buscas individuais por ID/código e para caminho hierárquico sem localização. Listas sem resultados retornam `200` e lista vazia.
 
 ## Estado e limites
 
-As rotas listadas estão implementadas em `LocalizacaoController` na `develop` consultada. Consultas GET não alteram dados. Este documento não implementa autenticação ou autorização; a ausência desses mecanismos não torna as rotas adequadas para produção.
+As rotas listadas estão implementadas em `LocalizacaoController` na `develop` consultada. `/{id}/impedimentos-exclusao` foi integrado depois da primeira versão deste documento (SCRUM-93) e foi acrescentado nesta revisão integradora SCRUM-81 para manter os documentos alinhados. Consultas GET não alteram dados. Este documento não implementa autenticação ou autorização; a ausência desses mecanismos não torna as rotas adequadas para produção.
 
 ## Verificação
 
