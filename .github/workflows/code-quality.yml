@@ -1,0 +1,73 @@
+name: CI docente - qualidade estatica
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pmd:
+    name: PMD e duplicacao (informativo)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Instalar PMD com integridade verificada
+        run: |
+          curl -fsSL --retry 3 https://github.com/pmd/pmd/releases/download/pmd_releases/7.29.0/pmd-dist-7.29.0-bin.zip -o "$RUNNER_TEMP/pmd.zip"
+          echo "d27177c185b837fa57f097e482d1253468aa035379c5eb2671fa0a279109b179  $RUNNER_TEMP/pmd.zip" | sha256sum -c
+          unzip -q "$RUNNER_TEMP/pmd.zip" -d "$RUNNER_TEMP"
+      - name: Analisar problemas de codigo
+        run: |
+          mkdir -p quality-reports
+          "$RUNNER_TEMP/pmd-bin-7.29.0/bin/pmd" check --dir src/main/java --use-version java-25 --rulesets category/java/errorprone.xml,category/java/bestpractices.xml,category/java/design.xml --format text --report-file quality-reports/pmd.txt --no-fail-on-violation
+          cat quality-reports/pmd.txt
+      - name: Identificar duplicacao
+        if: always()
+        run: |
+          mkdir -p quality-reports
+          "$RUNNER_TEMP/pmd-bin-7.29.0/bin/pmd" cpd --dir src/main/java --language java --minimum-tokens 100 --format text --no-fail-on-violation > quality-reports/cpd.txt
+          cat quality-reports/cpd.txt
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: relatorios-pmd
+          path: quality-reports/
+          if-no-files-found: warn
+          retention-days: 14
+  checkstyle:
+    name: Checkstyle (informativo)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Instalar Checkstyle com integridade verificada
+        run: |
+          curl -fsSL --retry 3 https://github.com/checkstyle/checkstyle/releases/download/checkstyle-14.3.0/checkstyle-14.3.0-all.jar -o "$RUNNER_TEMP/checkstyle.jar"
+          echo "754e218ab1fcabb1e1c5f8530e9d3aa37636806c22987bb279dd907a6ee749b2  $RUNNER_TEMP/checkstyle.jar" | sha256sum -c
+      - name: Relatorio de convencoes Java
+        run: |
+          mkdir -p quality-reports
+          java -jar "$RUNNER_TEMP/checkstyle.jar" -c /google_checks.xml -f plain -o quality-reports/checkstyle.txt src/main/java
+        continue-on-error: true
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: relatorio-checkstyle
+          path: quality-reports/
+          if-no-files-found: warn
+          retention-days: 14
