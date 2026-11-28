@@ -3,6 +3,7 @@ package br.senai.organizows.dto;
 import br.senai.organizows.enums.CategoriaMaterial;
 import br.senai.organizows.enums.StatusMaterial;
 import br.senai.organizows.model.Material;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@Schema(description = "Dados do material retornados pela API")
 public class MaterialResponseDTO {
 
     private Long id;
