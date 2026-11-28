@@ -2,8 +2,13 @@ name: CI docente - dependencias
 on:
   pull_request:
     branches: [main, develop]
+    types: [opened, synchronize, reopened, ready_for_review]
 permissions:
   contents: read
+  pull-requests: write
+concurrency:
+  group: dependency-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
 jobs:
   dependency-review:
     name: Dependency Review
@@ -12,4 +17,7 @@ jobs:
     steps:
       - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4
         with:
-          fail-on-severity: high
+          fail-on-severity: low
+          fail-on-scopes: runtime, development, unknown
+          # Forks e Dependabot recebem token somente leitura neste evento.
+          comment-summary-in-pr: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login != 'dependabot[bot]' && github.actor != 'dependabot[bot]' && 'always' || 'never' }}

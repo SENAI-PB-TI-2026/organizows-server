@@ -1,15 +1,17 @@
 version: 2
 updates:
+  # Fluxo pedagogico: os alunos corrigem as dependencias.
+  # Manter Dependabot alerts habilitado e security updates desabilitado
+  # nas configuracoes de seguranca do repositorio.
   - package-ecosystem: github-actions
     directory: /
     target-branch: develop
     schedule:
       interval: weekly
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
   - package-ecosystem: maven
     directory: /
     target-branch: develop
     schedule:
       interval: weekly
-    # Alertas de seguranca nativos separados; nao atualizar versoes didaticas automaticamente.
     open-pull-requests-limit: 0
