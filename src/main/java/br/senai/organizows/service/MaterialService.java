@@ -16,19 +16,27 @@ import br.senai.organizows.repository.MaterialRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 @Service
 @Transactional(readOnly = true)
 public class MaterialService {
 
-    private static final Pattern TERMOS_BUSCA = Pattern.compile("\\p{L}+|[0-9]+(?:[.,][0-9]+)?");
+    private static final String NUMERO = "[0-9]+(?:[.,][0-9]+)?";
+    private static final String UNIDADE_ELETRICA = "[kMmµμun]?(?:Ω|W|V|A|Hz|F|H)";
+    private static final Pattern TERMOS_BUSCA = Pattern.compile(
+            "(?<![\\p{L}\\p{N}])(?<medida>" + NUMERO + ")\\s*(?<unidade>" + UNIDADE_ELETRICA
+                    + ")(?![\\p{L}\\p{N}])|(?<numero>" + NUMERO + ")|\\p{L}+",
+            Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
     private final MaterialRepository materialRepository;
     private final LocalizacaoRepository localizacaoRepository;
@@ -88,23 +96,50 @@ public class MaterialService {
     }
 
     private boolean correspondeAosTermos(Material material, List<String> termos) {
-        List<String> campos = termosDeBusca(String.join(" ",
+        List<String> campos = Stream.of(
                 material.getNome(),
                 Objects.toString(material.getModelo(), ""),
-                Objects.toString(material.getEspecificacoesTecnicas(), "")));
-        return campos.containsAll(termos);
+                Objects.toString(material.getEspecificacoesTecnicas(), ""))
+                .flatMap(campo -> termosDeBusca(campo).stream())
+                .toList();
+        return termos.stream().allMatch(termo -> contemTermo(campos, termo));
     }
 
     private long relevanciaNoNome(Material material, List<String> termos) {
         List<String> nome = termosDeBusca(material.getNome());
-        return termos.stream().filter(nome::contains).count();
+        return termos.stream().filter(termo -> contemTermo(nome, termo)).count();
+    }
+
+    private boolean contemTermo(List<String> campos, String termo) {
+        // Consultas por valor ou unidade isolados também encontram medidas completas.
+        return campos.stream().anyMatch(campo -> campo.equals(termo)
+                || campo.startsWith(termo + " ") || campo.endsWith(" " + termo));
     }
 
     private List<String> termosDeBusca(String texto) {
-        return TERMOS_BUSCA.matcher(texto.toLowerCase(Locale.ROOT)).results()
-                .map(MatchResult::group)
-                .map(termo -> termo.replace(',', '.'))
-                .toList();
+        List<String> termos = new ArrayList<>();
+        Matcher matcher = TERMOS_BUSCA.matcher(texto);
+        while (matcher.find()) {
+            String unidade = matcher.group("unidade");
+            String numero = matcher.group("numero");
+            if (unidade != null) {
+                String unidadeNormalizada = unidade.toLowerCase(Locale.ROOT);
+                // M e m representam prefixos diferentes no SI.
+                if (unidade.startsWith("M")) {
+                    unidadeNormalizada = "M" + unidadeNormalizada.substring(1);
+                }
+                termos.add(normalizarNumero(matcher.group("medida")) + " " + unidadeNormalizada);
+            } else if (numero != null) {
+                termos.add(normalizarNumero(numero));
+            } else {
+                termos.add(matcher.group().toLowerCase(Locale.ROOT));
+            }
+        }
+        return termos;
+    }
+
+    private String normalizarNumero(String numero) {
+        return new BigDecimal(numero.replace(',', '.')).stripTrailingZeros().toPlainString();
     }
 
     public MaterialResponseDTO buscarPorCodigo(String codigo) {
