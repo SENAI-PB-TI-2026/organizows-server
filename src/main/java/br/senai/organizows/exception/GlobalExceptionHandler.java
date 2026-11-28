@@ -96,7 +96,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(
             DataIntegrityViolationException ex, HttpServletRequest request) {
-        log.warn("Violação de integridade no banco de dados ao processar {}: {}", request.getRequestURI(), ex.getMessage());
+        log.warn("Violação de integridade no banco de dados durante requisição {} (classificação: {})",
+                request.getMethod(), ex.getClass().getSimpleName());
         ApiErrorResponse error = ApiErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.CONFLICT.value())
