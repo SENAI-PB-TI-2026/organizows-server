@@ -9,12 +9,14 @@ Migration analisada: `src/main/resources/db/migration/V4__add_material_technical
 | `categoria` | `PERIFERICO`, `HARDWARE`, `CABO`, `COMPONENTE_ELETRONICO`, `EQUIPAMENTO`, `FERRAMENTA`, `CONSUMIVEL` | `CategoriaMaterial` | Correspondência exata: 7 valores |
 | `status` | `DISPONIVEL`, `EM_MANUTENCAO`, `OBSOLETO`, `INDISPONIVEL` | `StatusMaterial` | Correspondência exata: 4 valores |
 
-`MaterialRequestDTO` declara os campos como enums e exige ambos com `@NotNull`.
-`Material` persiste os enums como texto (`EnumType.STRING`) e as colunas já são
-`NOT NULL` desde a V2. Assim, os CHECKs da V4 complementam as validações da API
-e protegem gravações que não passem pelo serviço Java. As regras de grupo e
-subgrupo são validadas pelo `MaterialService`; elas não fazem parte dos CHECKs
-de categoria/status.
+Após a SCRUM-116, `MaterialCadastroBaseDTO` declara `categoria` e `status` como
+enums e exige ambos com `@NotNull`. `MaterialRequestDTO` herda esses campos e
+acrescenta `quantidadeDisponivel`; `MaterialUpdateRequestDTO` também herda os
+campos comuns, sem o saldo inicial. `Material` persiste os enums como texto
+(`EnumType.STRING`) e as colunas já são `NOT NULL` desde a V2. Assim, os CHECKs
+da V4 complementam as validações da API e protegem gravações que não passem
+pelo serviço Java. As regras de grupo e subgrupo são validadas pelo
+`MaterialService`; elas não fazem parte dos CHECKs de categoria/status.
 
 ## Validação manual com dados fictícios
 
