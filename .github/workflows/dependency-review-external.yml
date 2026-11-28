@@ -1,0 +1,26 @@
+# Publica diagnostico de forks/Dependabot com o workflow confiavel da base.
+# Nao fazer checkout, executar scripts/build do PR ou carregar configuracao externa.
+name: CI docente - dependencias externas
+on:
+  pull_request_target:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: read
+  pull-requests: write
+concurrency:
+  group: dependency-review-external-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  publish-external-review:
+    name: Dependency Review - resumo externo
+    if: github.event.pull_request.head.repo.full_name != github.repository || github.event.pull_request.user.login == 'dependabot[bot]' || github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Apenas consulta a API de dependencias e publica o resumo. Nenhum codigo do PR e executado.
+      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4
+        with:
+          fail-on-severity: low
+          fail-on-scopes: runtime, development, unknown
+          comment-summary-in-pr: always
