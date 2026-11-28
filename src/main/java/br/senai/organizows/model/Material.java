@@ -33,6 +33,9 @@ public class Material {
     @Column(nullable = false, length = 150)
     private String descricao;
 
+    @Column(name = "imagem_url", length = 2048)
+    private String imagemUrl;
+
     @Column(length = 500)
     private String caracteristicas;
 

@@ -1,0 +1,1 @@
+ALTER TABLE material ADD COLUMN imagem_url VARCHAR(2048);

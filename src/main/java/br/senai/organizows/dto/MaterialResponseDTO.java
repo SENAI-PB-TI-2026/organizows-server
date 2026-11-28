@@ -16,6 +16,7 @@ public class MaterialResponseDTO {
     private String codigo;
     private String nome;
     private String descricao;
+    private String imagemUrl;
     private String caracteristicas;
     private String modelo;
     private String especificacoesTecnicas;
@@ -37,6 +38,7 @@ public class MaterialResponseDTO {
         this.codigo = entity.getCodigo();
         this.nome = entity.getNome();
         this.descricao = entity.getDescricao();
+        this.imagemUrl = entity.getImagemUrl();
         this.caracteristicas = entity.getCaracteristicas();
         this.modelo = entity.getModelo();
         this.especificacoesTecnicas = entity.getEspecificacoesTecnicas();
