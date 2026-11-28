@@ -44,6 +44,12 @@ public class MaterialController {
         return ResponseEntity.ok(ApiResponse.success(materialService.listarClassificacoes()));
     }
 
+    @GetMapping("/busca")
+    public ResponseEntity<ApiResponse<List<MaterialResponseDTO>>> buscar(
+            @RequestParam String q, @RequestParam(required = false) String grupo) {
+        return ResponseEntity.ok(ApiResponse.success(materialService.buscar(q, grupo)));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<MaterialResponseDTO>> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(materialService.buscarPorId(id)));
