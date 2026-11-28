@@ -16,13 +16,19 @@ import br.senai.organizows.repository.MaterialRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.regex.MatchResult;
+import java.util.regex.Pattern;
 
 @Service
 @Transactional(readOnly = true)
 public class MaterialService {
+
+    private static final Pattern TERMOS_BUSCA = Pattern.compile("\\p{L}+|[0-9]+(?:[.,][0-9]+)?");
 
     private final MaterialRepository materialRepository;
     private final LocalizacaoRepository localizacaoRepository;
@@ -59,6 +65,46 @@ public class MaterialService {
     public List<MaterialResponseDTO> listarPorGrupo(String grupo) {
         return materialRepository.findByGrupoIgnoreCase(grupo.trim()).stream()
                 .map(MaterialResponseDTO::new).toList();
+    }
+
+    public List<MaterialResponseDTO> buscar(String consulta, String grupo) {
+        List<String> termos = termosDeBusca(consulta).stream()
+                .filter(termo -> !termo.equals("de"))
+                .distinct()
+                .toList();
+        if (termos.isEmpty()) {
+            return List.of();
+        }
+
+        List<Material> materiais = grupo == null || grupo.isBlank()
+                ? materialRepository.findAll()
+                : materialRepository.findByGrupoIgnoreCase(grupo.trim());
+        return materiais.stream()
+                .filter(material -> correspondeAosTermos(material, termos))
+                .sorted(Comparator.comparingLong((Material material) -> relevanciaNoNome(material, termos))
+                        .reversed().thenComparing(Material::getId))
+                .map(MaterialResponseDTO::new)
+                .toList();
+    }
+
+    private boolean correspondeAosTermos(Material material, List<String> termos) {
+        List<String> campos = termosDeBusca(String.join(" ",
+                material.getNome(),
+                Objects.toString(material.getModelo(), ""),
+                Objects.toString(material.getEspecificacoesTecnicas(), "")));
+        return campos.containsAll(termos);
+    }
+
+    private long relevanciaNoNome(Material material, List<String> termos) {
+        List<String> nome = termosDeBusca(material.getNome());
+        return termos.stream().filter(nome::contains).count();
+    }
+
+    private List<String> termosDeBusca(String texto) {
+        return TERMOS_BUSCA.matcher(texto.toLowerCase(Locale.ROOT)).results()
+                .map(MatchResult::group)
+                .map(termo -> termo.replace(',', '.'))
+                .toList();
     }
 
     public MaterialResponseDTO buscarPorCodigo(String codigo) {
